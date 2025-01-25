@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "641224575982",
+    "project_id": "posegame-638f2",
+    "storage_bucket": "posegame-638f2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:641224575982:android:680439cc6d523f86f45cff",
+        "android_client_info": {
+          "package_name": "com.example.camjam"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0vLlyyp78qd6jHdVydFz0YWrAsdBdtDQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
