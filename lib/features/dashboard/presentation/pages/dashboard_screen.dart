@@ -1,5 +1,5 @@
+import 'package:camjam/features/game/presentation/pages/create_game_screen.dart';
 import 'package:camjam/features/join_game/presentation/dialogs/join_game_dialog.dart';
-import 'package:camjam/features/pose_party/presentation/pages/create_game_screen.dart';
 import 'package:flutter/material.dart';
 import '../widgets/game_card.dart';
 

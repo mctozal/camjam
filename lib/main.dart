@@ -4,6 +4,7 @@ import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'features/user/presentation/pages/user_form_screen.dart';
 import 'features/dashboard/presentation/pages/dashboard_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding
@@ -13,17 +14,26 @@ void main() async {
         DefaultFirebaseOptions.currentPlatform, // Use platform-specific config
   );
 
-  runApp(SelfieGameApp());
+  // Check if user exists
+  final prefs = await SharedPreferences.getInstance();
+  final userHashId = prefs.getString('userHashId'); // Retrieve userHashId
+
+  runApp(SelfieGameApp(userHashId: userHashId));
 }
 
 class SelfieGameApp extends StatelessWidget {
+  final String? userHashId;
+
+  SelfieGameApp({required this.userHashId});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Cam Jam',
       theme: ThemeData(primarySwatch: Colors.blue),
-      initialRoute: '/',
+      initialRoute:
+          userHashId == null ? '/' : '/dashboard', // Check if userHashId exists
       routes: {
         '/': (context) => UserFormScreen(),
         '/dashboard': (context) => DashboardScreen(),

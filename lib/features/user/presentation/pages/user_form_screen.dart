@@ -1,4 +1,5 @@
-import 'package:camjam/core/services/firestore_service.dart';
+import 'package:camjam/core/models/User.dart';
+import 'package:camjam/core/services/user_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../widgets/user_input_form.dart';
@@ -11,7 +12,7 @@ class UserFormScreen extends StatefulWidget {
 class _UserFormScreenState extends State<UserFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
-  final FirestoreService _firestoreService = FirestoreService();
+  final UserService _userService = UserService();
   String _gender = 'Male'; // Default value
   int? _age;
 
@@ -26,15 +27,15 @@ class _UserFormScreenState extends State<UserFormScreen> {
   }
 
   Future<void> _saveUserToFirestore() async {
-    final userData = {
-      'username': _usernameController.text,
-      'gender': _gender,
-      'age': _age,
-      'createdAt': FieldValue.serverTimestamp(), // Add timestamp
-    };
+    User userData = User(
+        username: _usernameController.text,
+        gender: _gender,
+        age: _age,
+        createdAt: Timestamp.now(), // Add timestamp
+        id: '');
 
     try {
-      await _firestoreService.addUser(userData);
+      await _userService.addUser(userData);
       print('User added to Firestore: $userData');
     } catch (e) {
       print('Error saving user: $e');

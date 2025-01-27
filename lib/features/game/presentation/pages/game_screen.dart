@@ -1,22 +1,25 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:camjam/features/game/data/models/player.dart';
+import 'package:camjam/features/game/data/models/round.dart';
 import 'package:camjam/features/game/presentation/pages/voting_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class GameScreen extends StatefulWidget {
-  final List<Player> players; // List of players with their scores
+  final List<Player> players; // List of players
   final String currentPlayerId; // ID of the current player
   final int numberOfRounds;
   final int timePerRound;
 
-  GameScreen(
-      {required this.players,
-      required this.currentPlayerId,
-      required this.numberOfRounds,
-      required this.timePerRound});
+  GameScreen({
+    required this.players,
+    required this.currentPlayerId,
+    required this.numberOfRounds,
+    required this.timePerRound,
+  });
 
   @override
   _GameScreenState createState() => _GameScreenState();
@@ -54,7 +57,10 @@ class _GameScreenState extends State<GameScreen> {
         throw Exception("No cameras available");
       }
 
-      final frontCamera = cameras[1];
+      final frontCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
+      );
+
       _cameraController = CameraController(
         frontCamera,
         ResolutionPreset.medium,
@@ -84,22 +90,44 @@ class _GameScreenState extends State<GameScreen> {
   void _endRound() {
     _timer.cancel();
 
+    // Create a dummy round object
+    final currentRound = Round(
+      roundNumber: _roundNumber,
+      startTime: Timestamp.now(),
+      endTime: Timestamp.now(),
+      status: "in-progress",
+      scores: widget.players.asMap().map((index, player) {
+        return MapEntry(
+          player.id,
+          PlayerScore(
+            score: 0,
+            pictureUrl: player.id == widget.currentPlayerId
+                ? _capturedPhotoPath ?? ''
+                : '',
+            timestamp: Timestamp.now(),
+          ),
+        );
+      }),
+    );
+
     // Navigate to Voting Screen
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => VotingScreen(
-          players: widget.players,
+          currentRound: currentRound,
           currentPlayerId: widget.currentPlayerId,
-          capturedPhotoPath: _capturedPhotoPath,
           onRoundComplete: () {
-            // Prepare for the next round
             setState(() {
               _roundNumber++;
-              if (_roundNumber > widget.numberOfRounds) print('game is over');
-              _timerDuration = widget.timePerRound;
+              if (_roundNumber > widget.numberOfRounds) {
+                print('Game Over');
+              } else {
+                _timerDuration = widget.timePerRound;
+                _capturedPhotoPath = null;
+                _startTimer();
+              }
             });
-            _startTimer();
           },
         ),
       ),
@@ -114,7 +142,7 @@ class _GameScreenState extends State<GameScreen> {
         _capturedPhotoPath = photo.path;
       });
     } catch (e) {
-      print('Error capturing photo: $e');
+      debugPrint('Error capturing photo: $e');
     }
   }
 
@@ -153,13 +181,22 @@ class _GameScreenState extends State<GameScreen> {
               ],
             ),
           ),
-          if (_cameraController.value.isInitialized)
-            AspectRatio(
-              aspectRatio: _cameraController.value.aspectRatio,
-              child: CameraPreview(_cameraController),
+          if (_capturedPhotoPath != null)
+            Expanded(
+              child: Image.file(
+                File(_capturedPhotoPath!),
+                fit: BoxFit.cover,
+              ),
             )
           else
-            const Center(child: CircularProgressIndicator()),
+            Expanded(
+              child: Center(
+                child: const Text(
+                  'No photo captured yet.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ),
+            ),
           const Spacer(),
           ElevatedButton(
             onPressed: _capturePhoto,

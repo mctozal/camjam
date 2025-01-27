@@ -1,7 +1,11 @@
 import 'dart:math';
-import 'package:camjam/core/services/firestore_service.dart';
-import 'package:camjam/features/pose_party/data/repositories/game_repository.dart';
-import 'package:camjam/features/pose_party/presentation/pages/waiting_room_screen.dart';
+import 'package:camjam/core/models/User.dart';
+import 'package:camjam/core/services/user_service.dart';
+import 'package:camjam/features/game/data/models/game.dart';
+import 'package:camjam/features/game/data/models/player.dart';
+import 'package:camjam/features/game/data/repositories/game_repository.dart';
+import 'package:camjam/features/game/presentation/pages/waiting_room_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../widgets/game_option_card.dart';
 
@@ -14,7 +18,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   double _timePerRound = 5; // Default value for time per round
   double _numberOfRounds = 5; // Default value for number of rounds
   late String _gameCode;
-  final GameRepository _gameRepository = GameRepository(FirestoreService());
+  final GameRepository _gameRepository = GameRepository();
+  final UserService _userService = UserService();
 
   @override
   void initState() {
@@ -33,23 +38,38 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   void _startGame() async {
     // Create the game in Firestore
     try {
-      await _gameRepository.createGame(_gameCode, {
-        'gameCode': _gameCode,
-        'timePerRound': _timePerRound.toInt(),
-        'numberOfRounds': _numberOfRounds.toInt(),
-        'players': [], // Initial empty player list
-        'status': 'waiting', // Status can be 'waiting' or 'started'
-      });
+      User? currentUser = await _userService.getCurrentUser();
+
+      if (currentUser == null) return;
+
+      Game game = Game(
+          gameCode: _gameCode,
+          timePerRound: _timePerRound.toInt(),
+          numberOfRounds: _numberOfRounds.toInt(),
+          creatorId: currentUser.id,
+          createdAt: Timestamp.now(),
+          status: 'waiting',
+          players: []);
+
+      await _gameRepository.addGame(game);
+
+      Player player = Player(
+          id: currentUser.id,
+          name: currentUser.username,
+          joinedAt: Timestamp.now(),
+          status: 'active');
+
+      await _gameRepository.addPlayer(_gameCode, player);
 
       // Proceed to the Waiting Room
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => WaitingRoomScreen(
-            timePerRound: _timePerRound.toInt(),
-            numberOfRounds: _numberOfRounds.toInt(),
-            gameCode: _gameCode,
-          ),
+              timePerRound: _timePerRound.toInt(),
+              numberOfRounds: _numberOfRounds.toInt(),
+              gameCode: _gameCode,
+              currentUserId: currentUser.id),
         ),
       );
     } catch (e) {
