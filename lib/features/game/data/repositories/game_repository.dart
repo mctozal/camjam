@@ -17,12 +17,18 @@ class GameRepository {
 
   Future<void> addPlayer(String gameCode, Player player) async {
     try {
+      print('Adding player: ${player.toMap()} to game: $gameCode');
+
       await _firestore
           .collection('games')
           .doc(gameCode)
           .collection('players')
-          .add(player.toMap());
+          .doc(player.id)
+          .set(player.toMap());
+
+      print('Player added successfully');
     } catch (e) {
+      print('Error adding/updating player: $e');
       throw Exception('Error adding/updating player: $e');
     }
   }
@@ -31,10 +37,29 @@ class GameRepository {
   Future<void> updateGameState(String gameCode, String newState) async {
     try {
       await _firestore.collection('games').doc(gameCode).update({
-        'gameState': newState,
+        'status': newState,
       });
     } catch (e) {
       throw Exception('Error updating game state: $e');
+    }
+  }
+
+  Future<String?> getGameStatus(String gameCode) async {
+    try {
+      // Fetch the game document by gameCode
+      DocumentSnapshot doc =
+          await _firestore.collection('games').doc(gameCode).get();
+
+      // Check if the document exists and contains gameState
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data['status'] ??
+            'unknown'; // Return the gameState or 'unknown' if not found
+      } else {
+        return null; // Return null if the game doesn't exist
+      }
+    } catch (e) {
+      throw Exception('Error fetching game status: $e');
     }
   }
 
@@ -91,11 +116,6 @@ class GameRepository {
     }
   }
 
-  // Listen to game updates (including gameState and players)
-  Stream<DocumentSnapshot> listenToGame(String gameCode) {
-    return _firestore.collection('games').doc(gameCode).snapshots();
-  }
-
   // Listen to rounds updates for a specific game
   Stream<QuerySnapshot> listenToRounds(String gameCode) {
     return _firestore
@@ -119,16 +139,33 @@ class GameRepository {
     return _firestore
         .collection('games')
         .doc(gameCode)
+        .collection('players') // Listen to the players subcollection
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => Player.fromMap(
+              doc.data())) // Convert each document to a Player object
+          .toList();
+    });
+  }
+
+  Stream<Game> listenToGame(String gameCode) {
+    return _firestore
+        .collection('games')
+        .doc(gameCode)
         .snapshots()
         .map((snapshot) {
       if (snapshot.exists && snapshot.data() != null) {
-        final data = snapshot.data()!;
-        final players = (data['players'] as List<dynamic>?)
-            ?.map((playerData) => Player.fromMap(playerData))
-            .toList();
-        return players ?? [];
+        return Game.fromFirestore(
+            snapshot.data()!); // Convert single document to Game object
       } else {
-        return [];
+        return Game(
+            gameCode: gameCode,
+            timePerRound: 0,
+            numberOfRounds: 0,
+            creatorId: '',
+            createdAt: Timestamp.now(),
+            status: 'not_found'); // Return a default/fallback Game
       }
     });
   }

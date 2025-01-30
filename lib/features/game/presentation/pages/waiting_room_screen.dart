@@ -1,22 +1,19 @@
 import 'dart:async'; // For Timer
-import 'package:camjam/core/services/user_service.dart';
+import 'package:camjam/features/game/data/models/game.dart';
 import 'package:camjam/features/game/data/models/player.dart';
 import 'package:camjam/features/game/presentation/pages/game_screen.dart';
 import 'package:camjam/features/game/data/repositories/game_repository.dart';
 import 'package:flutter/material.dart';
 
 class WaitingRoomScreen extends StatefulWidget {
-  final int timePerRound;
-  final int numberOfRounds;
   final String gameCode;
   final String currentUserId;
+  final bool isCreator;
 
-  WaitingRoomScreen({
-    required this.timePerRound,
-    required this.numberOfRounds,
-    required this.gameCode,
-    required this.currentUserId,
-  });
+  WaitingRoomScreen(
+      {required this.gameCode,
+      required this.currentUserId,
+      required this.isCreator});
 
   @override
   _WaitingRoomScreenState createState() => _WaitingRoomScreenState();
@@ -25,8 +22,13 @@ class WaitingRoomScreen extends StatefulWidget {
 class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
   final GameRepository gameRepository =
       GameRepository(); // Initialize the repository
+
   List<Player> players = []; // Track the list of players
+  late Game game;
   late Stream<List<Player>> playerStream;
+  late Stream<Game> gameStream;
+
+  bool isGameInProgress = false;
 
   @override
   void initState() {
@@ -34,12 +36,33 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
 
     // Initialize the player stream
     playerStream = gameRepository.listenToPlayers(widget.gameCode);
+    // Initialize the game stream
+    gameStream = gameRepository.listenToGame(widget.gameCode);
 
     // Listen to the player stream and update the UI
-    playerStream.listen((updatedPlayers) {
+    playerStream.listen((updatedPlayers) async {
       setState(() {
         players = updatedPlayers;
       });
+    });
+
+    gameStream.listen((updatedGame) async {
+      setState(() {
+        game = updatedGame;
+      });
+      // Redirect to the GameScreen when the game status is in progress
+      if (game.status == 'in-progress') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GameScreen(
+              gameCode: game.gameCode,
+              currentPlayerId: widget.currentUserId,
+              isCreator: false,
+            ),
+          ),
+        );
+      }
     });
   }
 
@@ -111,21 +134,23 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                 },
               ),
             ),
-            SizedBox(height: 24),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: Size(MediaQuery.of(context).size.width * 0.6, 50),
+            const SizedBox(height: 12),
+            if (widget.isCreator)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize:
+                      Size(MediaQuery.of(context).size.width * 0.6, 50),
+                ),
+                onPressed: players.isNotEmpty
+                    ? () {
+                        _startGame();
+                      }
+                    : null, // Disable button if no players have joined
+                child: const Text(
+                  'Start Game',
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
-              onPressed: players.isNotEmpty
-                  ? () {
-                      _startGame();
-                    }
-                  : null, // Disable button if no players have joined
-              child: Text(
-                'Start Game',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
           ],
         ),
       ),
@@ -134,14 +159,15 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
 
   void _startGame() {
     // Navigate to the GameScreen
+    gameRepository.startGame(widget.gameCode);
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => GameScreen(
           currentPlayerId: widget.currentUserId,
-          players: players,
-          numberOfRounds: widget.numberOfRounds,
-          timePerRound: widget.timePerRound,
+          gameCode: widget.gameCode,
+          isCreator: true,
         ),
       ),
     );

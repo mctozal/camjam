@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:crypto/crypto.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HashService {

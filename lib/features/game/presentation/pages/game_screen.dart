@@ -1,7 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:camjam/features/game/data/models/game.dart';
 import 'package:camjam/features/game/data/models/player.dart';
 import 'package:camjam/features/game/data/models/round.dart';
+import 'package:camjam/features/game/data/repositories/game_data_repository.dart';
+import 'package:camjam/features/game/data/repositories/game_repository.dart';
+import 'package:camjam/features/game/presentation/pages/result_screen.dart';
 import 'package:camjam/features/game/presentation/pages/voting_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -9,45 +13,87 @@ import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class GameScreen extends StatefulWidget {
-  final List<Player> players; // List of players
   final String currentPlayerId; // ID of the current player
-  final int numberOfRounds;
-  final int timePerRound;
+  final String gameCode;
+  final bool isCreator;
 
-  GameScreen({
-    required this.players,
-    required this.currentPlayerId,
-    required this.numberOfRounds,
-    required this.timePerRound,
-  });
+  GameScreen(
+      {required this.currentPlayerId,
+      required this.gameCode,
+      required this.isCreator});
 
   @override
   _GameScreenState createState() => _GameScreenState();
 }
 
 class _GameScreenState extends State<GameScreen> {
+  final GameDataRepository _gameDataRepository = GameDataRepository();
+  final GameRepository gameRepository = GameRepository();
   late CameraController _cameraController;
   late Future<void> _initializeControllerFuture;
   String? _capturedPhotoPath;
+  List<Player> players = []; // Track the list of players
+  late Game game;
+  late Stream<List<Player>> playerStream;
+  late Stream<Game> gameStream;
 
   int _roundNumber = 1;
   int _timerDuration = 10;
   late Timer _timer;
+  String _pov = '';
 
   @override
   void initState() {
     super.initState();
+    // Initialize the player stream
+    playerStream = gameRepository.listenToPlayers(widget.gameCode);
+    // Initialize the game stream
+    gameStream = gameRepository.listenToGame(widget.gameCode);
+
+    // Listen to the player stream and update the UI
+    playerStream.listen((updatedPlayers) async {
+      setState(() {
+        players = updatedPlayers;
+      });
+    });
+
+    gameStream.listen((updatedGame) async {
+      setState(() {
+        game = updatedGame;
+      });
+    });
+
     _requestPermissions().then((_) => _initializeCamera());
     _startTimer();
   }
 
-  Future<void> _requestPermissions() async {
-    final cameraStatus = await Permission.camera.request();
-    final micStatus = await Permission.microphone.request();
+  Future<void> _fetchPov() async {
+    _pov = await _gameDataRepository.getRandomPov() ?? '';
+  }
 
-    if (cameraStatus.isPermanentlyDenied || micStatus.isPermanentlyDenied) {
-      openAppSettings();
+  Future<void> _requestPermissions() async {
+    // Check current camera permission status
+    if (await Permission.camera.isDenied ||
+        await Permission.camera.isRestricted) {
+      final cameraStatus = await Permission.camera.request();
+      if (cameraStatus.isPermanentlyDenied) {
+        openAppSettings(); // Redirect the user to settings if permission is permanently denied
+        return;
+      }
     }
+
+    // Check current microphone permission status
+    if (await Permission.microphone.isDenied ||
+        await Permission.microphone.isRestricted) {
+      final micStatus = await Permission.microphone.request();
+      if (micStatus.isPermanentlyDenied) {
+        openAppSettings(); // Redirect the user to settings if permission is permanently denied
+        return;
+      }
+    }
+
+    // Both permissions are granted or already available
+    debugPrint('Camera and microphone permissions granted.');
   }
 
   Future<void> _initializeCamera() async {
@@ -96,7 +142,7 @@ class _GameScreenState extends State<GameScreen> {
       startTime: Timestamp.now(),
       endTime: Timestamp.now(),
       status: "in-progress",
-      scores: widget.players.asMap().map((index, player) {
+      scores: players.asMap().map((index, player) {
         return MapEntry(
           player.id,
           PlayerScore(
@@ -110,28 +156,39 @@ class _GameScreenState extends State<GameScreen> {
       }),
     );
 
-    // Navigate to Voting Screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => VotingScreen(
-          currentRound: currentRound,
-          currentPlayerId: widget.currentPlayerId,
-          onRoundComplete: () {
-            setState(() {
-              _roundNumber++;
-              if (_roundNumber > widget.numberOfRounds) {
-                print('Game Over');
-              } else {
-                _timerDuration = widget.timePerRound;
-                _capturedPhotoPath = null;
-                _startTimer();
-              }
-            });
-          },
+    if (_roundNumber >= game.numberOfRounds) {
+      // Navigate to Result Screen after the final round
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResultScreen(players: players),
         ),
-      ),
-    );
+      );
+    } else {
+      // Navigate to Voting Screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VotingScreen(
+            currentRound: currentRound,
+            currentPlayerId: widget.currentPlayerId,
+            onRoundComplete: () {
+              setState(() {
+                _roundNumber++;
+                _fetchPov();
+                if (_roundNumber > game.numberOfRounds) {
+                  print('Game Over');
+                } else {
+                  _timerDuration = game.timePerRound;
+                  _capturedPhotoPath = null;
+                  _startTimer();
+                }
+              });
+            },
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _capturePhoto() async {
@@ -181,6 +238,10 @@ class _GameScreenState extends State<GameScreen> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(_pov),
+          ),
           if (_capturedPhotoPath != null)
             Expanded(
               child: Image.file(
@@ -190,11 +251,27 @@ class _GameScreenState extends State<GameScreen> {
             )
           else
             Expanded(
-              child: Center(
-                child: const Text(
-                  'No photo captured yet.',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
+              child: FutureBuilder<void>(
+                future: _initializeControllerFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    // Display the camera preview
+                    return CameraPreview(_cameraController);
+                  } else if (snapshot.hasError) {
+                    // Display an error message if the camera couldn't be initialized
+                    return const Center(
+                      child: Text(
+                        'Error initializing camera.',
+                        style: TextStyle(fontSize: 16, color: Colors.red),
+                      ),
+                    );
+                  } else {
+                    // Display a loading indicator while the camera initializes
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                },
               ),
             ),
           const Spacer(),

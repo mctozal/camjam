@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:io';
 import 'package:camjam/features/game/data/models/round.dart';
 
 class VotingScreen extends StatelessWidget {
@@ -21,13 +20,14 @@ class VotingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Voting Screen'),
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(
-              'Vote for the best photo!',
+            const Text(
+              'Vote for the most funny picture!',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -64,7 +64,7 @@ class VotingScreen extends StatelessWidget {
                             title: Text('Player: $playerId'),
                             subtitle: Text(
                               'Score: ${playerScore.score}',
-                              style: TextStyle(color: Colors.grey),
+                              style: const TextStyle(color: Colors.grey),
                             ),
                             trailing: ElevatedButton(
                               onPressed: () {

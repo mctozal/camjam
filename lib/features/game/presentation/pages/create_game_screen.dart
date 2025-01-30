@@ -35,41 +35,43 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     });
   }
 
+  Future<void> createGame() async {
+    User? currentUser = await _userService.getCurrentUser();
+
+    if (currentUser == null) {
+      print("Error: No current user found.");
+      return;
+    }
+
+    Game game = Game(
+        gameCode: _gameCode,
+        timePerRound: _timePerRound.toInt(),
+        numberOfRounds: _numberOfRounds.toInt(),
+        creatorId: currentUser.id,
+        createdAt: Timestamp.now(),
+        status: 'waiting');
+
+    await _gameRepository.addGame(game);
+
+    Player player = Player(
+        id: currentUser.id,
+        name: currentUser.username,
+        joinedAt: Timestamp.now(),
+        status: 'active');
+
+    await _gameRepository.addPlayer(_gameCode, player);
+  }
+
   void _startGame() async {
-    // Create the game in Firestore
+    String userId = await _userService.getUserHashId();
+    createGame();
     try {
-      User? currentUser = await _userService.getCurrentUser();
-
-      if (currentUser == null) return;
-
-      Game game = Game(
-          gameCode: _gameCode,
-          timePerRound: _timePerRound.toInt(),
-          numberOfRounds: _numberOfRounds.toInt(),
-          creatorId: currentUser.id,
-          createdAt: Timestamp.now(),
-          status: 'waiting',
-          players: []);
-
-      await _gameRepository.addGame(game);
-
-      Player player = Player(
-          id: currentUser.id,
-          name: currentUser.username,
-          joinedAt: Timestamp.now(),
-          status: 'active');
-
-      await _gameRepository.addPlayer(_gameCode, player);
-
       // Proceed to the Waiting Room
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => WaitingRoomScreen(
-              timePerRound: _timePerRound.toInt(),
-              numberOfRounds: _numberOfRounds.toInt(),
-              gameCode: _gameCode,
-              currentUserId: currentUser.id),
+              isCreator: true, gameCode: _gameCode, currentUserId: userId),
         ),
       );
     } catch (e) {

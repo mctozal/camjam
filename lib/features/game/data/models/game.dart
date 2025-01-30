@@ -8,17 +8,14 @@ class Game {
   final String creatorId;
   final Timestamp createdAt;
   final String status; // "waiting", "in-progress", "completed"
-  final List<Player> players;
 
-  Game({
-    required this.gameCode,
-    required this.timePerRound,
-    required this.numberOfRounds,
-    required this.creatorId,
-    required this.createdAt,
-    required this.status,
-    required this.players,
-  });
+  Game(
+      {required this.gameCode,
+      required this.timePerRound,
+      required this.numberOfRounds,
+      required this.creatorId,
+      required this.createdAt,
+      required this.status});
 
   // Convert Game model to Map for Firestore
   Map<String, dynamic> toMap() {
@@ -29,22 +26,17 @@ class Game {
       'creatorId': creatorId,
       'createdAt': createdAt,
       'status': status,
-      'players': players.map((player) => player.toMap()).toList(),
     };
   }
 
   // Convert Firestore document to Game model
   factory Game.fromFirestore(Map<String, dynamic> data) {
     return Game(
-      gameCode: data['gameCode'],
-      timePerRound: data['timePerRound'],
-      numberOfRounds: data['numberOfRounds'],
-      creatorId: data['creatorId'],
-      createdAt: data['createdAt'],
-      status: data['status'],
-      players: (data['players'] as List)
-          .map((playerData) => Player.fromMap(playerData))
-          .toList(),
-    );
+        gameCode: data['gameCode'],
+        timePerRound: data['timePerRound'],
+        numberOfRounds: data['numberOfRounds'],
+        creatorId: data['creatorId'],
+        createdAt: data['createdAt'],
+        status: data['status']);
   }
 }
