@@ -1,4 +1,4 @@
-import 'package:camjam/features/game/presentation/pages/voting_screen.dart';
+import 'package:camjam/core/services/permission_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +7,10 @@ import 'features/dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
+  PermissionService permissionService = PermissionService();
+
+  permissionService.requestPermissions();
+
   WidgetsFlutterBinding
       .ensureInitialized(); // Ensures binding is ready for Firebase
   await Firebase.initializeApp(

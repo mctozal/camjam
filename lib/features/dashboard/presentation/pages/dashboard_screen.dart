@@ -15,16 +15,16 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Game Dashboard'),
+        title: const Text('Game Dashboard'),
       ),
       body: Column(
         children: [
           // Join Game Button
           Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: () => _showJoinGameDialog(context),
-              child: Text('Join a Game'),
+              child: const Text('Join a Game'),
             ),
           ),
 
@@ -33,7 +33,7 @@ class DashboardScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2, // Number of cards per row
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,

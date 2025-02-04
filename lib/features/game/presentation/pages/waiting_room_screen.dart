@@ -1,6 +1,8 @@
 import 'dart:async'; // For Timer
+import 'package:camjam/core/services/lifecycle_service.dart';
 import 'package:camjam/features/game/data/models/game.dart';
 import 'package:camjam/features/game/data/models/player.dart';
+import 'package:camjam/features/game/data/repositories/player_repository.dart';
 import 'package:camjam/features/game/presentation/pages/game_screen.dart';
 import 'package:camjam/features/game/data/repositories/game_repository.dart';
 import 'package:flutter/material.dart';
@@ -20,8 +22,10 @@ class WaitingRoomScreen extends StatefulWidget {
 }
 
 class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
-  final GameRepository gameRepository =
+  final GameRepository _gameRepository =
       GameRepository(); // Initialize the repository
+
+  final PlayerRepository _playerRepository = PlayerRepository();
 
   List<Player> players = []; // Track the list of players
   late Game game;
@@ -34,15 +38,23 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
   void initState() {
     super.initState();
 
+    // Initialize global lifecycle service
+    LifecycleService().initialize(
+      userId: widget.currentUserId,
+      gameCode: widget.gameCode,
+    );
+
     // Initialize the player stream
-    playerStream = gameRepository.listenToPlayers(widget.gameCode);
+    playerStream = _playerRepository.listenToPlayers(widget.gameCode);
     // Initialize the game stream
-    gameStream = gameRepository.listenToGame(widget.gameCode);
+    gameStream = _gameRepository.listenToGame(widget.gameCode);
 
     // Listen to the player stream and update the UI
     playerStream.listen((updatedPlayers) async {
       setState(() {
-        players = updatedPlayers;
+        players = updatedPlayers
+            .where((player) => player.status == 'active')
+            .toList();
       });
     });
 
@@ -68,6 +80,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
 
   @override
   void dispose() {
+    LifecycleService().dispose();
     super.dispose();
   }
 
@@ -97,7 +110,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                 stream: playerStream,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   if (snapshot.hasError) {
@@ -134,7 +147,6 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 12),
             if (widget.isCreator)
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -159,7 +171,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
 
   void _startGame() {
     // Navigate to the GameScreen
-    gameRepository.startGame(widget.gameCode);
+    _gameRepository.startGame(widget.gameCode);
 
     Navigator.push(
       context,

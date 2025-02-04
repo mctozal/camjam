@@ -2,6 +2,7 @@ import 'package:camjam/core/models/user.dart';
 import 'package:camjam/core/services/user_service.dart';
 import 'package:camjam/features/game/data/models/player.dart';
 import 'package:camjam/features/game/data/repositories/game_repository.dart';
+import 'package:camjam/features/game/data/repositories/player_repository.dart';
 import 'package:camjam/features/game/presentation/pages/waiting_room_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +16,9 @@ class _JoinGameDialogState extends State<JoinGameDialog> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _codeController = TextEditingController();
   UserService userService = UserService();
-  GameRepository gameRepository = GameRepository();
+  final PlayerRepository _playerRepository = PlayerRepository();
+  final GameRepository _gameRepository = GameRepository();
+
   String userId = '';
   String userName = '';
 
@@ -28,11 +31,11 @@ class _JoinGameDialogState extends State<JoinGameDialog> {
   }
 
   Future<bool> isAvailable(String gameCode) async {
-    return await gameRepository.getGameStatus(gameCode) == 'waiting';
+    return await _gameRepository.getGameStatus(gameCode) == 'waiting';
   }
 
   Future<void> addNewPlayer(String gameCode) async {
-    gameRepository.addPlayer(
+    _playerRepository.addPlayer(
         gameCode,
         Player(
             id: userId,

@@ -4,6 +4,7 @@ import 'package:camjam/core/services/user_service.dart';
 import 'package:camjam/features/game/data/models/game.dart';
 import 'package:camjam/features/game/data/models/player.dart';
 import 'package:camjam/features/game/data/repositories/game_repository.dart';
+import 'package:camjam/features/game/data/repositories/player_repository.dart';
 import 'package:camjam/features/game/presentation/pages/waiting_room_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   double _numberOfRounds = 5; // Default value for number of rounds
   late String _gameCode;
   final GameRepository _gameRepository = GameRepository();
+  final PlayerRepository _playerRepository = PlayerRepository();
   final UserService _userService = UserService();
 
   @override
@@ -59,7 +61,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         joinedAt: Timestamp.now(),
         status: 'active');
 
-    await _gameRepository.addPlayer(_gameCode, player);
+    await _playerRepository.addPlayer(_gameCode, player);
   }
 
   void _startGame() async {
