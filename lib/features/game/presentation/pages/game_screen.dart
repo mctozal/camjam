@@ -8,10 +8,12 @@ import 'package:camjam/features/game/data/models/player.dart';
 import 'package:camjam/features/game/data/models/round.dart';
 import 'package:camjam/features/game/data/repositories/game_data_repository.dart';
 import 'package:camjam/features/game/data/repositories/game_repository.dart';
+import 'package:camjam/features/game/data/repositories/photo_repository.dart';
 import 'package:camjam/features/game/data/repositories/player_repository.dart';
 import 'package:camjam/features/game/data/repositories/round_repository.dart';
 import 'package:camjam/features/game/presentation/pages/result_screen.dart';
 import 'package:camjam/features/game/presentation/pages/voting_screen.dart';
+import 'package:camjam/features/game/presentation/widgets/timer_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -38,6 +40,7 @@ class _GameScreenState extends State<GameScreen> {
   final GameRepository _gameRepository = GameRepository();
   final PlayerRepository _playerRepository = PlayerRepository();
   final RoundRepository _roundRepository = RoundRepository();
+  final PhotoRepository _photoRepository = PhotoRepository();
   late CameraController _cameraController;
   late Future<void> _initializeControllerFuture;
   String? _capturedPhotoPath;
@@ -60,6 +63,7 @@ class _GameScreenState extends State<GameScreen> {
       userId: widget.currentPlayerId,
       gameCode: widget.gameCode,
     );
+    _attemptCameraInitialization();
 
     // Initialize the player stream
     playerStream = _playerRepository.listenToPlayers(widget.gameCode);
@@ -82,15 +86,33 @@ class _GameScreenState extends State<GameScreen> {
         }
       });
     });
-
-    _initializeCamera();
-    _startTimer();
-    _fetchPov();
-    _addRound();
   }
 
   Future<void> _fetchPov() async {
     _pov = await _gameDataRepository.getRandomPov() ?? '';
+  }
+
+  Future<void> _attemptCameraInitialization({int retries = 5}) async {
+    for (int attempt = 1; attempt <= retries; attempt++) {
+      try {
+        await _initializeCamera();
+
+        // Camera initialized successfully, proceed with the game
+        _startTimer();
+        _fetchPov();
+        _addRound();
+
+        return;
+      } catch (e) {
+        debugPrint('Attempt $attempt: Failed to initialize camera: $e');
+
+        if (attempt == retries) {
+          _showCameraErrorDialog();
+        } else {
+          await Future.delayed(const Duration(seconds: 2)); // Retry delay
+        }
+      }
+    }
   }
 
   Future<void> _initializeCamera() async {
@@ -201,24 +223,8 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _savePhotoToFirestore(String photoUrl) async {
-    try {
-      final FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-      await firestore
-          .collection('games')
-          .doc(widget.gameCode)
-          .collection('photos') // Store in a subcollection
-          .add({
-        'url': photoUrl,
-        'uploadedBy': widget.currentPlayerId,
-        'timestamp': FieldValue.serverTimestamp(),
-        'round': _roundNumber
-      });
-
-      debugPrint('Photo saved to Firestore');
-    } catch (e) {
-      debugPrint('Error saving photo to Firestore: $e');
-    }
+    _photoRepository.savePhotoToFirestore(photoUrl, widget.gameCode,
+        _roundNumber.toString(), widget.currentPlayerId);
   }
 
   Future<void> _uploadPhoto(XFile photo) async {
@@ -232,10 +238,10 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     LifecycleService().dispose();
     _timer.cancel();
     _cameraController.dispose();
+    super.dispose();
   }
 
   @override
@@ -251,18 +257,10 @@ class _GameScreenState extends State<GameScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Round: $_roundNumber',
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Time: $_timerDuration s',
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red),
-                ),
+                TimerWidget(
+                  roundNumber: _roundNumber,
+                  timerDuration: _timerDuration,
+                )
               ],
             ),
           ),
@@ -330,6 +328,29 @@ class _GameScreenState extends State<GameScreen> {
               );
             },
             child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCameraErrorDialog() {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Camera Error"),
+        content: const Text(
+            "Failed to initialize the camera. Please check permissions and try again."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _attemptCameraInitialization(); // Retry when user presses OK
+            },
+            child: const Text("Retry"),
           ),
         ],
       ),

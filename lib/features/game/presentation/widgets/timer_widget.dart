@@ -1,47 +1,22 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 
-class TimerWidget extends StatefulWidget {
-  final int seconds;
-  final VoidCallback onTimerEnd;
+class TimerWidget extends StatelessWidget {
+  final int roundNumber;
+  final int timerDuration;
 
-  const TimerWidget({required this.seconds, required this.onTimerEnd});
-
-  @override
-  _TimerWidgetState createState() => _TimerWidgetState();
-}
-
-class _TimerWidgetState extends State<TimerWidget> {
-  late int remainingSeconds;
-  late Timer timer;
-
-  @override
-  void initState() {
-    super.initState();
-    remainingSeconds = widget.seconds;
-    timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (remainingSeconds > 0) {
-        setState(() {
-          remainingSeconds--;
-        });
-      } else {
-        widget.onTimerEnd();
-        timer.cancel();
-      }
-    });
-  }
+  const TimerWidget({required this.roundNumber, required this.timerDuration});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      '$remainingSeconds',
-      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text('Round: $roundNumber',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text('Time: $timerDuration s',
+            style: TextStyle(
+                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red)),
+      ],
     );
-  }
-
-  @override
-  void dispose() {
-    timer.cancel();
-    super.dispose();
   }
 }
