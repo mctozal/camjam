@@ -109,103 +109,115 @@ class _VotingScreenState extends State<VotingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Voting Screen')),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Display timer
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              'Time Remaining: $remainingTime seconds',
-              style: const TextStyle(fontSize: 24),
-            ),
+    return PopScope(
+        canPop: false,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Voting Screen'),
+            automaticallyImplyLeading: false,
           ),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Display timer
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Time Remaining: $remainingTime seconds',
+                  style: const TextStyle(fontSize: 24),
+                ),
+              ),
 
-          // Horizontal list of players and their scores
-          Container(
-            height: 100,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: players.length,
-              itemBuilder: (context, index) {
-                final player = players[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Column(
-                    children: [
-                      CircleAvatar(child: Text(player.name[0])),
-                      Text(player.name),
-                      Text('Score: ${player.score}'),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Grid view for displaying pictures
-          Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: pictureStream,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                final pictures = snapshot.data ?? [];
-                return GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 5,
-                    mainAxisSpacing: 5,
-                  ),
-                  itemCount: pictures.length,
+              // Horizontal list of players and their scores
+              Container(
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: players.length,
                   itemBuilder: (context, index) {
-                    final picture = pictures[index];
-                    final isSelected = selectedPicture == picture['url'];
-
-                    return GestureDetector(
-                      onTap: () => _selectPicture(
-                          picture['url']!, picture['uploadedBy']!),
-                      child: Stack(
+                    final player = players[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Column(
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                                8), // Optional rounded corners
-                            child: Image.network(
-                              picture['url']!,
-                              fit: BoxFit.cover,
-                              width: double.infinity, // Adjust size as needed
-                              height: double.infinity,
-                            ),
-                          ),
-                          if (isSelected)
-                            const Positioned(
-                              top: 5, // Adjust position inside the image
-                              right: 5,
-                              child: Icon(
-                                Icons.star,
-                                color: Colors.yellow,
-                                size: 24, // Adjust icon size
-                              ),
-                            ),
+                          CircleAvatar(child: Text(player.name[0])),
+                          Text(player.name),
+                          Text('Score: ${player.score}'),
                         ],
                       ),
                     );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+
+              // Grid view for displaying pictures
+              Expanded(
+                child: StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: pictureStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+
+                    final pictures = snapshot.data
+                            ?.where((pictureData) =>
+                                pictureData['round'] ==
+                                widget.roundNumber.toString())
+                            .toList() ??
+                        [];
+                    return GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 5,
+                        mainAxisSpacing: 5,
+                      ),
+                      itemCount: pictures.length,
+                      itemBuilder: (context, index) {
+                        final picture = pictures[index];
+                        final isSelected = selectedPicture == picture['url'];
+
+                        return GestureDetector(
+                          onTap: () => _selectPicture(
+                              picture['url']!, picture['uploadedBy']!),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                    8), // Optional rounded corners
+                                child: Image.network(
+                                  picture['url']!,
+                                  fit: BoxFit.cover,
+                                  width:
+                                      double.infinity, // Adjust size as needed
+                                  height: double.infinity,
+                                ),
+                              ),
+                              if (isSelected)
+                                const Positioned(
+                                  top: 5, // Adjust position inside the image
+                                  right: 5,
+                                  child: Icon(
+                                    Icons.star,
+                                    color: Colors.yellow,
+                                    size: 24, // Adjust icon size
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ));
   }
 
   void _showCreatorDisconnectedDialog() {

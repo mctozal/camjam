@@ -12,9 +12,11 @@ class PhotoRepository {
         .map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
+
         return {
           'url': data['url'] ?? '',
           'uploadedBy': data['uploadedBy'] ?? '',
+          'round': data['round'] ?? ''
         };
       }).toList();
     });

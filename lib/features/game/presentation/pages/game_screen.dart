@@ -191,29 +191,28 @@ class _GameScreenState extends State<GameScreen> {
 
     if (!captured) await _capturePhoto();
 
-    if (_roundNumber >= game.numberOfRounds) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ResultScreen(players: players),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VotingScreen(
+          gameCode: game.gameCode,
+          currentUserId: widget.currentPlayerId,
+          isCreator: widget.isCreator,
+          roundNumber: _roundNumber,
+          onRoundComplete: () {
+            if (_roundNumber > game.numberOfRounds) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ResultScreen(players: players),
+                ),
+              );
+            }
+            _startNewRound();
+          },
         ),
-      );
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => VotingScreen(
-            gameCode: game.gameCode,
-            currentUserId: widget.currentPlayerId,
-            isCreator: widget.isCreator,
-            roundNumber: _roundNumber,
-            onRoundComplete: () {
-              _startNewRound();
-            },
-          ),
-        ),
-      );
-    }
+      ),
+    );
   }
 
   Future<void> _capturePhoto() async {
@@ -254,71 +253,74 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Game Screen - Round $_roundNumber'),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TimerWidget(
-                  roundNumber: _roundNumber,
-                  timerDuration: _timerDuration,
+    return PopScope(
+        canPop: false,
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('Game Screen - Round $_roundNumber'),
+            automaticallyImplyLeading: false,
+          ),
+          body: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TimerWidget(
+                      roundNumber: _roundNumber,
+                      timerDuration: _timerDuration,
+                    )
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(_pov),
+              ),
+              if (_capturedPhotoPath != null)
+                Expanded(
+                  child: Image.file(
+                    File(_capturedPhotoPath!),
+                    fit: BoxFit.cover,
+                  ),
                 )
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(_pov),
-          ),
-          if (_capturedPhotoPath != null)
-            Expanded(
-              child: Image.file(
-                File(_capturedPhotoPath!),
-                fit: BoxFit.cover,
-              ),
-            )
-          else
-            Expanded(
-              child: FutureBuilder<void>(
-                future: _initializeControllerFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done &&
-                      _cameraController.value.isInitialized) {
-                    // Display the camera preview
+              else
+                Expanded(
+                  child: FutureBuilder<void>(
+                    future: _initializeControllerFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done &&
+                          _cameraController.value.isInitialized) {
+                        // Display the camera preview
 
-                    return CameraPreview(_cameraController);
-                  } else if (snapshot.hasError) {
-                    // Display an error message if the camera couldn't be initialized
-                    return const Center(
-                      child: Text(
-                        'Error initializing camera.',
-                        style: TextStyle(fontSize: 16, color: Colors.red),
-                      ),
-                    );
-                  } else {
-                    // Display a loading indicator while the camera initializes
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                },
-              ),
-            ),
-          const Spacer(),
-          if (!captured)
-            ElevatedButton(
-              onPressed: _capturePhoto,
-              child: const Text('Capture Photo'),
-            ),
-        ],
-      ),
-    );
+                        return CameraPreview(_cameraController);
+                      } else if (snapshot.hasError) {
+                        // Display an error message if the camera couldn't be initialized
+                        return const Center(
+                          child: Text(
+                            'Error initializing camera.',
+                            style: TextStyle(fontSize: 16, color: Colors.red),
+                          ),
+                        );
+                      } else {
+                        // Display a loading indicator while the camera initializes
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              const Spacer(),
+              if (!captured)
+                ElevatedButton(
+                  onPressed: _capturePhoto,
+                  child: const Text('Capture Photo'),
+                ),
+            ],
+          ),
+        ));
   }
 
   void _showCreatorDisconnectedDialog() {

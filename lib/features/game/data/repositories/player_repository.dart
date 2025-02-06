@@ -22,6 +22,19 @@ class PlayerRepository {
     }
   }
 
+  void removePlayerFromGame(String gameCode, String playerId) {
+    _firestore
+        .collection('games')
+        .doc(gameCode)
+        .collection('players')
+        .doc(playerId)
+        .delete()
+        .then(
+          (doc) => print("Document deleted"),
+          onError: (e) => print("Error updating document $e"),
+        );
+  }
+
   Stream<List<Player>> listenToPlayers(String gameCode) {
     return _firestore
         .collection('games')
