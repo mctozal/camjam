@@ -53,6 +53,7 @@ class _GameScreenState extends State<GameScreen> {
   int _timerDuration = 10;
   late Timer _timer;
   String _pov = '';
+  bool captured = false;
 
   @override
   void initState() {
@@ -90,6 +91,20 @@ class _GameScreenState extends State<GameScreen> {
 
   Future<void> _fetchPov() async {
     _pov = await _gameDataRepository.getRandomPov() ?? '';
+  }
+
+  void _startNewRound() {
+    setState(() {
+      captured = false;
+      _roundNumber++;
+      _capturedPhotoPath = null;
+      _timerDuration = game.timePerRound;
+    });
+
+    _timer.cancel();
+    _fetchPov();
+    _startTimer();
+    _addRound();
   }
 
   Future<void> _attemptCameraInitialization({int retries = 5}) async {
@@ -132,6 +147,7 @@ class _GameScreenState extends State<GameScreen> {
       );
 
       _initializeControllerFuture = _cameraController.initialize();
+      setState(() {});
     } catch (e) {
       debugPrint('Error initializing camera: $e');
     }
@@ -156,7 +172,7 @@ class _GameScreenState extends State<GameScreen> {
         widget.gameCode, round); // Ensure round is properly saved
   }
 
-  void _startTimer() {
+  void _startTimer() async {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_timerDuration > 0) {
         setState(() {
@@ -168,13 +184,14 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  void _endRound() {
-    _timer.cancel();
+  void _endRound() async {
+    if (_timer.isActive) {
+      _timer.cancel(); // Stop the timer before navigation
+    }
 
-    // Create a dummy round object
+    if (!captured) await _capturePhoto();
 
     if (_roundNumber >= game.numberOfRounds) {
-      // Navigate to Result Screen after the final round
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -182,27 +199,18 @@ class _GameScreenState extends State<GameScreen> {
         ),
       );
     } else {
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => VotingScreen(
-              gameCode: game.gameCode,
-              currentUserId: widget.currentPlayerId,
-              isCreator: widget.isCreator,
-              roundNumber: _roundNumber,
-              onRoundComplete: () {
-                setState(() {
-                  _roundNumber++;
-                  _fetchPov();
-                  if (_roundNumber > game.numberOfRounds) {
-                    print('Game Over');
-                  } else {
-                    _timerDuration = game.timePerRound;
-                    _capturedPhotoPath = null;
-                    _startTimer();
-                  }
-                });
-              }),
+            gameCode: game.gameCode,
+            currentUserId: widget.currentPlayerId,
+            isCreator: widget.isCreator,
+            roundNumber: _roundNumber,
+            onRoundComplete: () {
+              _startNewRound();
+            },
+          ),
         ),
       );
     }
@@ -214,6 +222,7 @@ class _GameScreenState extends State<GameScreen> {
       final photo = await _cameraController.takePicture();
       setState(() {
         _capturedPhotoPath = photo.path;
+        captured = true;
       });
 
       await _uploadPhoto(photo);
@@ -223,7 +232,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _savePhotoToFirestore(String photoUrl) async {
-    _photoRepository.savePhotoToFirestore(photoUrl, widget.gameCode,
+    await _photoRepository.savePhotoToFirestore(photoUrl, widget.gameCode,
         _roundNumber.toString(), widget.currentPlayerId);
   }
 
@@ -238,10 +247,9 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   void dispose() {
+    super.dispose();
     LifecycleService().dispose();
     _timer.cancel();
-    _cameraController.dispose();
-    super.dispose();
   }
 
   @override
@@ -280,8 +288,10 @@ class _GameScreenState extends State<GameScreen> {
               child: FutureBuilder<void>(
                 future: _initializeControllerFuture,
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
+                  if (snapshot.connectionState == ConnectionState.done &&
+                      _cameraController.value.isInitialized) {
                     // Display the camera preview
+
                     return CameraPreview(_cameraController);
                   } else if (snapshot.hasError) {
                     // Display an error message if the camera couldn't be initialized
@@ -301,10 +311,11 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
           const Spacer(),
-          ElevatedButton(
-            onPressed: _capturePhoto,
-            child: const Text('Capture Photo'),
-          ),
+          if (!captured)
+            ElevatedButton(
+              onPressed: _capturePhoto,
+              child: const Text('Capture Photo'),
+            ),
         ],
       ),
     );

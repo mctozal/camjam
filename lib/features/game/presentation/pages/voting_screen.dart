@@ -33,7 +33,7 @@ class _VotingScreenState extends State<VotingScreen> {
   final PhotoRepository _photoRepository = PhotoRepository();
   late Stream<List<Player>> playerStream;
   late Stream<Game> gameStream;
-  late Stream<List<Map<String, String>>>
+  late Stream<List<Map<String, dynamic>>>
       pictureStream; // Stream for pictures taken
   List<Player> players = [];
   int remainingTime = 30; // Timer value in seconds
@@ -72,8 +72,10 @@ class _VotingScreenState extends State<VotingScreen> {
       });
     });
 
+    pictureStream = _photoRepository.listenToPictures(widget.gameCode);
+
     // Start a countdown timer for 30 seconds
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (remainingTime > 0) {
         setState(() {
           remainingTime--;
@@ -86,10 +88,6 @@ class _VotingScreenState extends State<VotingScreen> {
         // Submit scores or perform other game end actions here
       }
     });
-
-    // Stream for pictures (example: could be a list of image URLs)
-    pictureStream =
-        _photoRepository.listenToPictures(widget.gameCode, widget.roundNumber);
   }
 
   @override
@@ -149,7 +147,7 @@ class _VotingScreenState extends State<VotingScreen> {
 
           // Grid view for displaying pictures
           Expanded(
-            child: StreamBuilder<List<Map<String, String>>>(
+            child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: pictureStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -161,7 +159,6 @@ class _VotingScreenState extends State<VotingScreen> {
                 }
 
                 final pictures = snapshot.data ?? [];
-
                 return GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,

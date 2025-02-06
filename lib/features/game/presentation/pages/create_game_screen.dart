@@ -16,7 +16,7 @@ class CreateGameScreen extends StatefulWidget {
 }
 
 class _CreateGameScreenState extends State<CreateGameScreen> {
-  double _timePerRound = 5; // Default value for time per round
+  double _timePerRound = 10; // Default value for time per round
   double _numberOfRounds = 5; // Default value for number of rounds
   late String _gameCode;
   final GameRepository _gameRepository = GameRepository();
@@ -105,8 +105,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
             GameOptionCard(
               title: 'Time Per Round',
               description: 'Choose how long each round lasts.',
-              min: 3, // Minimum time (in seconds)
-              max: 10, // Maximum time (in seconds)
+              min: 10, // Minimum time (in seconds)
+              max: 20, // Maximum time (in seconds)
               initialValue: _timePerRound,
               unit: 'seconds',
               onValueChanged: (value) {
