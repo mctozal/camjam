@@ -1,7 +1,9 @@
 import 'package:camjam/core/models/User.dart';
 import 'package:camjam/core/services/user_service.dart';
+import 'package:camjam/features/user/presentation/pages/user_avatar_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import '../widgets/user_input_form.dart';
 
 class UserFormScreen extends StatefulWidget {
@@ -45,25 +47,36 @@ class _UserFormScreenState extends State<UserFormScreen> {
     }
   }
 
-  void _navigateToDashboard(BuildContext context) async {
+  void _navigateToAvatarSelection(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       await _saveUserToFirestore(); // Save user to Firestore
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+        return UserAvatarScreen(
+          userName: _usernameController.text,
+        );
+      }));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('User Form'),
-      ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 120, 20, 100),
+        padding: const EdgeInsets.fromLTRB(80, 100, 80, 100),
         child: Column(
           children: [
             Expanded(
+              flex: 1,
+              child: Center(
+                child: Image.asset(
+                  'lib/assets/logo-big.png', // Eğer PNG kullanıyorsan: Image.asset('assets/images/logo.png')
+                  height: 300,
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
               child: UserInputForm(
                 formKey: _formKey,
                 usernameController: _usernameController,
@@ -75,11 +88,12 @@ class _UserFormScreenState extends State<UserFormScreen> {
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(MediaQuery.of(context).size.width * 0.6,
                     50), // 60% of screen width, height: 50
-                maximumSize: Size(MediaQuery.of(context).size.width * 0.8,
+                maximumSize: Size(MediaQuery.of(context).size.width * 1.2,
                     60), // 80% of screen width, height: 60
+                backgroundColor: Colors.green,
               ),
-              onPressed: () => _navigateToDashboard(context),
-              child: Text('Continue'),
+              onPressed: () => _navigateToAvatarSelection(context),
+              child: Text('Start'),
             ),
           ],
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class UserInputForm extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -17,6 +18,19 @@ class UserInputForm extends StatefulWidget {
   _UserInputFormState createState() => _UserInputFormState();
 }
 
+// Custom TextInputFormatter to convert text to uppercase
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    String newText = newValue.text.toUpperCase();
+    return TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
+  }
+}
+
 class _UserInputFormState extends State<UserInputForm> {
   String _selectedGender = 'Male'; // Default value
 
@@ -27,9 +41,22 @@ class _UserInputFormState extends State<UserInputForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Username Field
+          // align center
+
+          Center(
+            child: Text(
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+                "Who's There?"),
+          ),
+          SizedBox(height: 16),
           TextFormField(
             controller: widget.usernameController,
+            inputFormatters: [
+              UpperCaseTextFormatter(), // Forces uppercase input
+            ],
             decoration: InputDecoration(
               labelText: 'Username',
               border: OutlineInputBorder(),

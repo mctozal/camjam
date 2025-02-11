@@ -1,10 +1,12 @@
 import 'package:camjam/core/services/permission_service.dart';
+import 'package:camjam/features/user/presentation/pages/user_avatar_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'features/user/presentation/pages/user_form_screen.dart';
 import 'features/dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'theme.dart';
 
 void main() async {
   PermissionService permissionService = PermissionService();
@@ -35,7 +37,7 @@ class SelfieGameApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Cam Jam',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: darkTheme,
       initialRoute:
           userHashId == null ? '/' : '/dashboard', // Check if userHashId exists
       routes: {
