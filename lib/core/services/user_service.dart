@@ -43,4 +43,18 @@ class UserService {
       throw Exception('Error adding user to Firestore: $e');
     }
   }
+
+  Future<void> updateUserField(String field, dynamic value) async {
+    try {
+      // Get the current user's hash ID
+      final String currentUserId = await getUserHashId();
+
+      // Update only the specified field
+      await _firestore.collection('users').doc(currentUserId).update({
+        field: value,
+      });
+    } catch (e) {
+      throw Exception('Error updating user field in Firestore: $e');
+    }
+  }
 }

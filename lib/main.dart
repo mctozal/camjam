@@ -1,6 +1,7 @@
 import 'package:camjam/core/services/permission_service.dart';
 import 'package:camjam/features/user/presentation/pages/user_avatar_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'features/user/presentation/pages/user_form_screen.dart';
@@ -24,7 +25,10 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final userHashId = prefs.getString('userHashId'); // Retrieve userHashId
 
-  runApp(SelfieGameApp(userHashId: userHashId));
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((_) {
+    runApp(SelfieGameApp(userHashId: userHashId));
+  });
 }
 
 class SelfieGameApp extends StatelessWidget {

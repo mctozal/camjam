@@ -6,6 +6,7 @@ class User {
   final String gender;
   String id;
   final String username;
+  String? selectedImage = '';
 
   User({
     required this.age,
@@ -13,6 +14,7 @@ class User {
     required this.gender,
     required this.id,
     required this.username,
+    this.selectedImage,
   });
 
   // Convert User model to Map for Firestore
@@ -23,6 +25,7 @@ class User {
       'gender': gender,
       'id': id,
       'username': username,
+      'selectedImage': selectedImage,
     };
   }
 
@@ -34,6 +37,7 @@ class User {
       gender: data['gender'],
       id: data['id'],
       username: data['username'],
+      selectedImage: data['selectedImage'],
     );
   }
 }

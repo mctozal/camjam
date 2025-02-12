@@ -74,6 +74,7 @@ ThemeData darkTheme = ThemeData(
       borderSide: BorderSide(color: Colors.green, width: 2),
     ),
     labelStyle: TextStyle(color: Colors.grey[200]),
+    floatingLabelAlignment: FloatingLabelAlignment.center,
   ),
 
   // 🌟 Card Theme

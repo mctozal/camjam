@@ -5,6 +5,7 @@ class Player {
   final String name;
   int score;
   final Timestamp joinedAt;
+  final String avatar; // "avatar_0.png", "avatar_1.png", ...
   final String status; // "active", "inactive"
 
   Player({
@@ -12,6 +13,7 @@ class Player {
     required this.name,
     this.score = 0,
     required this.joinedAt,
+    required this.avatar,
     required this.status,
   });
 
@@ -22,6 +24,7 @@ class Player {
       'name': name,
       'score': score,
       'joinedAt': joinedAt,
+      'avatar': avatar,
       'status': status,
     };
   }
@@ -33,6 +36,7 @@ class Player {
       name: data['name'],
       score: data['score'] ?? 0,
       joinedAt: data['joinedAt'],
+      avatar: data['avatar'] ?? "avatar_0.png",
       status: data['status'] ?? "active",
     );
   }

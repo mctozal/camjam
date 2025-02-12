@@ -1,10 +1,19 @@
-import 'package:flutter/material.dart';
+import 'package:camjam/core/services/user_service.dart';
 import 'package:camjam/features/user/presentation/widgets/image_carousel.dart';
+import 'package:flutter/material.dart';
 
-class UserAvatarScreen extends StatelessWidget {
+class UserAvatarScreen extends StatefulWidget {
   final String userName;
 
   UserAvatarScreen({required this.userName});
+
+  @override
+  _UserAvatarScreenState createState() => _UserAvatarScreenState();
+}
+
+class _UserAvatarScreenState extends State<UserAvatarScreen> {
+  String? selectedImageIndex; // Store the selected image index
+  final UserService _userService = UserService();
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +34,7 @@ class UserAvatarScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 16),
                 ),
                 Text(
-                  userName,
+                  widget.userName,
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -43,13 +52,31 @@ class UserAvatarScreen extends StatelessWidget {
             ),
             SizedBox(height: 20), // Adds spacing
             SizedBox(
-              height: 400, // Set a fixed height for the carousel
-              child: ImageCarousel(),
+              height: 300,
+              width: 600,
+              child: ImageCarousel(
+                onImageSelected: (index) {
+                  setState(() {
+                    selectedImageIndex =
+                        index; // Store the selected image index
+                  });
+                },
+              ),
             ),
-            SizedBox(height: 20), // Adds spacing
+            SizedBox(height: 30), // Adds spacing
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacementNamed(context, '/dashboard');
+                if (selectedImageIndex != null) {
+                  // Proceed with the selected image
+                  _userService.updateUserField(
+                      'selectedImage', selectedImageIndex);
+                  Navigator.pushReplacementNamed(context, '/dashboard');
+                } else {
+                  // Show a message to select an image
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please select an avatar')),
+                  );
+                }
               },
               child: Text("That's it"),
               style: ButtonStyle(

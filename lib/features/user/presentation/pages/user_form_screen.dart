@@ -33,6 +33,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
         username: _usernameController.text,
         gender: _gender,
         age: _age,
+        selectedImage: null,
         createdAt: Timestamp.now(), // Add timestamp
         id: '');
 
