@@ -1,6 +1,5 @@
 import 'dart:math';
-import 'dart:ui';
-import 'package:camjam/core/models/user.dart';
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:camjam/core/services/user_service.dart';
 import 'package:camjam/features/game/data/models/game.dart';
 import 'package:camjam/features/game/data/models/player.dart';
@@ -11,6 +10,7 @@ import 'package:camjam/features/user/presentation/pages/user_avatar_screen.dart'
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -93,15 +93,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WaitingRoomScreen(
-          isCreator: true,
-          gameCode: _gameCode!,
-          currentUserId: userId,
-        ),
-      ),
-    );
+        context,
+        MaterialPageRoute(
+          builder: (context) => AnimatedSplashScreen(
+            splash: Center(
+              child: Lottie.asset('lib/assets/splash_animation.json'),
+            ),
+            nextScreen: WaitingRoomScreen(
+                gameCode: _gameCode!,
+                currentUserId: userId,
+                isCreator: true), // Pass the nextScreen dynamically
+            splashTransition: SplashTransition.scaleTransition,
+            splashIconSize: 200,
+            backgroundColor: Colors.black,
+          ),
+        ));
   }
 
   Future<void> _joinGame() async {
@@ -145,16 +151,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Image.asset(
-              'lib/assets/logo-small.png',
-              height: 50,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Image.asset(
+                  'lib/assets/logo-small.png',
+                  height: 50,
+                ),
+                IconButton(
+                    onPressed: () {},
+                    icon:
+                        ImageIcon(AssetImage('lib/assets/question_icon.png'))),
+                IconButton(
+                    onPressed: () {},
+                    icon: ImageIcon(AssetImage('lib/assets/heart_icon.png'))),
+                IconButton(
+                    onPressed: () {},
+                    icon:
+                        ImageIcon(AssetImage('lib/assets/currency_icon.png'))),
+              ],
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Welcome,',
-                  style: TextStyle(fontSize: 16),
+                  style:
+                      TextStyle(fontSize: 16, overflow: TextOverflow.ellipsis),
                 ),
                 Text(
                   userName,
@@ -166,18 +189,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             GestureDetector(
               onTap: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                     builder: (context) => UserAvatarScreen(
                       userName: userName,
-                    ), // Replace with your screen
+                    ),
                   ),
                 );
               },
@@ -222,16 +245,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 15),
+            SizedBox(height: 48),
             Text('OR', style: TextStyle(fontSize: 24)),
-            SizedBox(height: 15),
+            SizedBox(height: 48),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Row(
                   children: [
-                    SizedBox(width: 25),
+                    SizedBox(width: 24),
                     SizedBox(
                         width: 150,
                         child: Text('Round', // Fixed width for alignment
@@ -272,10 +295,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: 12),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(width: 25),
                     SizedBox(
                         width: 150,
                         child: Text(
@@ -311,7 +334,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 40),
+            SizedBox(height: 24),
             ElevatedButton(
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(Color(0xFF4E0F97)),

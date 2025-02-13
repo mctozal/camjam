@@ -14,13 +14,14 @@ class RoundRepository {
   }
 
   // Listen to round updates
-  Stream<DocumentSnapshot> listenToRound(String gameCode, int roundNumber) {
+  Stream<Round> listenToRound(String gameCode, int roundNumber) {
     return _firestore
         .collection('games')
         .doc(gameCode)
         .collection('rounds')
-        .doc('round_$roundNumber')
-        .snapshots();
+        .doc('$roundNumber')
+        .snapshots()
+        .map((snapshot) => Round.fromMap(snapshot.data()!));
   }
 
   // Update game state (e.g., waiting, in-progress, completed, paused)

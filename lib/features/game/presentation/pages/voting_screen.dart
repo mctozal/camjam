@@ -140,7 +140,10 @@ class _VotingScreenState extends State<VotingScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: Column(
                         children: [
-                          CircleAvatar(child: Text(player.name[0])),
+                          CircleAvatar(
+                            backgroundImage:
+                                AssetImage('lib/assets/${player.avatar}'),
+                          ),
                           Text(player.name),
                           Text('Score: ${player.score}'),
                         ],

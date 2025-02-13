@@ -1,4 +1,5 @@
 import 'package:camjam/core/services/user_service.dart';
+import 'package:camjam/features/dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:camjam/features/user/presentation/widgets/image_carousel.dart';
 import 'package:flutter/material.dart';
 
@@ -70,12 +71,10 @@ class _UserAvatarScreenState extends State<UserAvatarScreen> {
                   // Proceed with the selected image
                   _userService.updateUserField(
                       'selectedImage', selectedImageIndex);
-                  Navigator.pushReplacementNamed(context, '/dashboard');
+                  Navigator.pushReplacementNamed(context,
+                      '/dashboard'); // Navigate to the dashboard screen
                 } else {
                   // Show a message to select an image
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please select an avatar')),
-                  );
                 }
               },
               child: Text("That's it"),

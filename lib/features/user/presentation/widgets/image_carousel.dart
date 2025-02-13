@@ -10,9 +10,10 @@ class ImageCarousel extends StatefulWidget {
 }
 
 class _ImageCarouselState extends State<ImageCarousel> {
-  static const int _initialPage = 3; // Start from the middle
+  static const int _initialPage = 3;
   late PageController _controller;
   String _selectedImage = "";
+  bool _pageInitialized = false; // Flag to track initialization
 
   final List<String> _images = [
     "avatar_0.png",
@@ -37,32 +38,39 @@ class _ImageCarouselState extends State<ImageCarousel> {
   @override
   void initState() {
     super.initState();
+    _selectedImage = _images[_initialPage];
     _controller =
         PageController(viewportFraction: 0.3, initialPage: _initialPage);
-    _selectedImage = _images[_initialPage]; // Set initial selection
 
-    _controller.addListener(_onPageChanged);
+    // Use a post-frame callback to access page after layout
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _pageInitialized = true;
+      });
+      _controller.addListener(_onPageChanged);
+    });
   }
 
-  // Helper method for calculating the scale
   double _getScale(int index) {
-    if (_controller.hasClients) {
+    if (_pageInitialized && _controller.hasClients) {
+      // Check if initialized
       double pageValue = _controller.page ?? _initialPage.toDouble();
       double scale = 1 - (index - pageValue).abs() * 0.3;
-      return scale.clamp(0.7, 1.3); // Ensure proper scaling
+      return scale.clamp(0.7, 1.3);
     }
     return 1.0;
   }
 
-  // Listener method to handle page changes
   void _onPageChanged() {
-    if (_controller.hasClients && _controller.page != null) {
+    if (_pageInitialized &&
+        _controller.hasClients &&
+        _controller.page != null) {
       int closestIndex = _controller.page!.round();
       if (_selectedImage != _images[closestIndex]) {
         setState(() {
           _selectedImage = _images[closestIndex];
+          widget.onImageSelected(_selectedImage);
         });
-        widget.onImageSelected(_selectedImage);
       }
     }
   }
@@ -75,25 +83,27 @@ class _ImageCarouselState extends State<ImageCarousel> {
           child: PageView.builder(
             controller: _controller,
             itemCount: _images.length,
-            onPageChanged: (index) {
-              setState(() {
-                _selectedImage = _images[index];
-              });
-              widget.onImageSelected(_selectedImage);
-            },
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(),
             itemBuilder: (context, index) {
               return GestureDetector(
                 onTap: () {
                   _controller.animateToPage(
                     index,
-                    duration: Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
                   );
                 },
-                child: Transform.scale(
-                  scale: _getScale(index),
+                child: AnimatedBuilder(
+                  // Use AnimatedBuilder for efficiency
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _getScale(index),
+                      child: child, // Child is the static part of the widget
+                    );
+                  },
                   child: Column(
+                    // This part doesn't rebuild
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       CircleAvatar(
@@ -102,13 +112,13 @@ class _ImageCarouselState extends State<ImageCarousel> {
                         minRadius: 30,
                         maxRadius: 75,
                         backgroundColor: _selectedImage == _images[index]
-                            ? Colors.blueAccent // Highlight selected avatar
+                            ? Colors.blueAccent
                             : Colors.transparent,
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         _avatarNames[index],
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,

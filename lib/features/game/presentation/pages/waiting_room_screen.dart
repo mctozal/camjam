@@ -29,7 +29,6 @@ class WaitingRoomScreen extends StatefulWidget {
 class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
   final GameRepository _gameRepository = GameRepository();
   final PlayerRepository _playerRepository = PlayerRepository();
-  final UserService _userService = UserService();
 
   late String creatorName = 'Creator';
   late String creatorAvatar = 'avatar_0.png';
@@ -209,7 +208,10 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                       );
                     }
 
-                    final players = snapshot.data ?? [];
+                    final players = snapshot.data!
+                            .where((player) => player.name != creatorName)
+                            .toList() ??
+                        [];
 
                     if (players.isEmpty) {
                       return const Center(
@@ -267,6 +269,20 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                     ),
                   ),
                 ),
+              Padding(
+                padding: const EdgeInsets.only(top: 5.0, bottom: 5.0),
+                child: TextButton(
+                  onPressed: () {
+                    _playerRepository.removePlayerFromGame(
+                        widget.gameCode, widget.currentUserId);
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    'Leave',
+                    style: TextStyle(fontSize: 18, color: Color(0xFF4E0F97)),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

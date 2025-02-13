@@ -48,6 +48,7 @@ class _GameScreenState extends State<GameScreen> {
   late Game game;
   late Stream<List<Player>> playerStream;
   late Stream<Game> gameStream;
+  late Stream<Round> roundStream;
 
   int _roundNumber = 1;
   int _timerDuration = 10;
@@ -71,6 +72,8 @@ class _GameScreenState extends State<GameScreen> {
     // Initialize the game stream
     gameStream = _gameRepository.listenToGame(widget.gameCode);
 
+    roundStream = _roundRepository.listenToRound(widget.gameCode, _roundNumber);
+
     // Listen to the player stream and update the UI
     playerStream.listen((updatedPlayers) async {
       setState(() {
@@ -86,6 +89,12 @@ class _GameScreenState extends State<GameScreen> {
           _showCreatorDisconnectedDialog();
         }
       });
+    });
+
+    roundStream.listen((updatedRound) async {
+      if (updatedRound.status == 'completed') {
+        _startNewRound();
+      }
     });
   }
 
