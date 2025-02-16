@@ -16,6 +16,7 @@ void main() async {
 
   WidgetsFlutterBinding
       .ensureInitialized(); // Ensures binding is ready for Firebase
+
   await Firebase.initializeApp(
     options:
         DefaultFirebaseOptions.currentPlatform, // Use platform-specific config
@@ -34,7 +35,7 @@ void main() async {
 class SelfieGameApp extends StatelessWidget {
   final String? userHashId;
 
-  SelfieGameApp({required this.userHashId});
+  const SelfieGameApp({super.key, required this.userHashId});
 
   @override
   Widget build(BuildContext context) {

@@ -15,7 +15,8 @@ class VotingScreen extends StatefulWidget {
   final int roundNumber;
   final VoidCallback onRoundComplete;
 
-  VotingScreen({
+  const VotingScreen({
+    super.key,
     required this.gameCode,
     required this.currentUserId,
     required this.isCreator,

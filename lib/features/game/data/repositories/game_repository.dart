@@ -24,6 +24,17 @@ class GameRepository {
     }
   }
 
+  // Update pov
+  Future<void> updatePov(String gameCode, String pov) async {
+    try {
+      await _firestore.collection('games').doc(gameCode).update({
+        'pov': pov,
+      });
+    } catch (e) {
+      throw Exception('Error updating game state: $e');
+    }
+  }
+
   Future<String?> getGameStatus(String gameCode) async {
     try {
       // Fetch the game document by gameCode
@@ -71,7 +82,8 @@ class GameRepository {
             numberOfRounds: 0,
             creatorId: '',
             createdAt: Timestamp.now(),
-            status: 'not_found'); // Return a default/fallback Game
+            status: 'not_found',
+            pov: ''); // Return a default/fallback Game
       }
     });
   }

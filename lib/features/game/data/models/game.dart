@@ -1,4 +1,3 @@
-import 'package:camjam/features/game/data/models/player.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Game {
@@ -8,6 +7,7 @@ class Game {
   final String creatorId;
   final Timestamp createdAt;
   final String status; // "waiting", "in-progress", "completed"
+  final String pov;
 
   Game(
       {required this.gameCode,
@@ -15,7 +15,8 @@ class Game {
       required this.numberOfRounds,
       required this.creatorId,
       required this.createdAt,
-      required this.status});
+      required this.status,
+      required this.pov});
 
   // Convert Game model to Map for Firestore
   Map<String, dynamic> toMap() {
@@ -26,6 +27,7 @@ class Game {
       'creatorId': creatorId,
       'createdAt': createdAt,
       'status': status,
+      'pov': pov,
     };
   }
 
@@ -37,6 +39,7 @@ class Game {
         numberOfRounds: data['numberOfRounds'],
         creatorId: data['creatorId'],
         createdAt: data['createdAt'],
-        status: data['status']);
+        status: data['status'],
+        pov: data['pov']);
   }
 }

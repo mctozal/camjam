@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:camjam/core/services/lifecycle_service.dart';
-import 'package:camjam/core/services/user_service.dart';
 import 'package:camjam/features/game/data/models/game.dart';
 import 'package:camjam/features/game/data/models/player.dart';
 import 'package:camjam/features/game/data/repositories/player_repository.dart';
@@ -41,6 +40,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
     status: '',
     numberOfRounds: 0,
     timePerRound: 0,
+    pov: '',
     createdAt: Timestamp.fromDate(DateTime.now().toUtc()),
   );
 
@@ -325,10 +325,6 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
           isCreator: true,
         ),
       ),
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Game Started!')),
     );
   }
 }

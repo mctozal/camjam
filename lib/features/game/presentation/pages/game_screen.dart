@@ -11,6 +11,8 @@ import 'package:camjam/features/game/data/repositories/game_repository.dart';
 import 'package:camjam/features/game/data/repositories/photo_repository.dart';
 import 'package:camjam/features/game/data/repositories/player_repository.dart';
 import 'package:camjam/features/game/data/repositories/round_repository.dart';
+import 'package:camjam/features/game/presentation/pages/counter_screen.dart';
+import 'package:camjam/features/game/presentation/pages/pov_screen.dart';
 import 'package:camjam/features/game/presentation/pages/result_screen.dart';
 import 'package:camjam/features/game/presentation/pages/voting_screen.dart';
 import 'package:camjam/features/game/presentation/widgets/timer_widget.dart';
@@ -49,6 +51,8 @@ class _GameScreenState extends State<GameScreen> {
   late Stream<List<Player>> playerStream;
   late Stream<Game> gameStream;
   late Stream<Round> roundStream;
+  bool _showCounterScreen = true;
+  bool _showPOVScreen = false;
 
   int _roundNumber = 1;
   int _timerDuration = 10;
@@ -92,14 +96,25 @@ class _GameScreenState extends State<GameScreen> {
     });
 
     roundStream.listen((updatedRound) async {
-      if (updatedRound.status == 'completed') {
-        _startNewRound();
-      }
+      if (updatedRound.status == 'completed') {}
     });
+
+    if (_roundNumber > game.numberOfRounds) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResultScreen(players: players),
+        ),
+      );
+    }
   }
 
   Future<void> _fetchPov() async {
-    _pov = await _gameDataRepository.getRandomPov() ?? '';
+    if (widget.isCreator) {
+      _pov = await _gameDataRepository.getRandomPov() ?? '';
+      _gameRepository.updatePov(widget.gameCode, _pov);
+    } else
+      _pov = game.pov;
   }
 
   void _startNewRound() {
@@ -107,6 +122,8 @@ class _GameScreenState extends State<GameScreen> {
       captured = false;
       _roundNumber++;
       _capturedPhotoPath = null;
+      _showPOVScreen = false;
+      _showCounterScreen = true;
       _timerDuration = game.timePerRound;
     });
 
@@ -209,14 +226,6 @@ class _GameScreenState extends State<GameScreen> {
           isCreator: widget.isCreator,
           roundNumber: _roundNumber,
           onRoundComplete: () {
-            if (_roundNumber > game.numberOfRounds) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ResultScreen(players: players),
-                ),
-              );
-            }
             _startNewRound();
           },
         ),
@@ -262,6 +271,29 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_showCounterScreen) {
+      return CounterScreen(
+        roundNumber: _roundNumber,
+        onCountdownComplete: () {
+          setState(() {
+            _showCounterScreen = false;
+            _showPOVScreen = true;
+          });
+        },
+      );
+    }
+
+    if (_showPOVScreen) {
+      return PoseScreen(
+        pose: _pov,
+        onPoseComplete: () {
+          setState(() {
+            _showPOVScreen = false;
+          });
+        },
+      );
+    }
+
     return PopScope(
         canPop: false,
         child: Scaffold(

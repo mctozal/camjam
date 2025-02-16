@@ -4,7 +4,7 @@ import 'package:camjam/features/game/data/models/player.dart';
 class ResultScreen extends StatelessWidget {
   final List<Player> players;
 
-  ResultScreen({required this.players});
+  const ResultScreen({super.key, required this.players});
 
   @override
   Widget build(BuildContext context) {

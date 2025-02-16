@@ -77,6 +77,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       numberOfRounds: _numberOfRounds.toInt(),
       creatorId: userId,
       createdAt: Timestamp.now(),
+      pov: '',
       status: 'waiting',
     );
 
