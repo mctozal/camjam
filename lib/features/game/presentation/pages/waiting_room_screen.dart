@@ -1,4 +1,4 @@
-import 'dart:async'; // For Timer
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +8,7 @@ import 'package:camjam/features/game/data/models/player.dart';
 import 'package:camjam/features/game/data/repositories/player_repository.dart';
 import 'package:camjam/features/game/presentation/pages/game_screen.dart';
 import 'package:camjam/features/game/data/repositories/game_repository.dart';
+import 'package:collection/collection.dart'; // Add this for firstWhereOrNull
 
 class WaitingRoomScreen extends StatefulWidget {
   final String gameCode;
@@ -29,70 +30,76 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
   final GameRepository _gameRepository = GameRepository();
   final PlayerRepository _playerRepository = PlayerRepository();
 
-  late String creatorName = 'Creator';
-  late String creatorAvatar = 'avatar_0.png';
+  String creatorName = 'Unknown'; // Default value
+  String creatorAvatar = 'avatar_0.png'; // Default value
 
   List<Player> players = [];
 
   late Game game = Game(
-    gameCode: '',
+    gameCode: widget.gameCode,
     creatorId: '',
-    status: '',
+    status: 'waiting',
     numberOfRounds: 0,
     timePerRound: 0,
     pov: '',
     createdAt: Timestamp.fromDate(DateTime.now().toUtc()),
+    currentRound: 1,
+    roundPhase: 'counter',
   );
 
   late Stream<List<Player>> playerStream;
   late Stream<Game> gameStream;
 
   void _fetchCreator() {
-    creatorName = players.isNotEmpty
-        ? players.firstWhere((player) => player.id == game.creatorId).name
-        : 'Unknown';
-
-    creatorAvatar = players.isNotEmpty
-        ? players.firstWhere((player) => player.id == game.creatorId).avatar
-        : 'avatar_0.png';
+    // Use firstWhereOrNull to safely find the creator
+    final creator =
+        players.firstWhereOrNull((player) => player.id == game.creatorId);
+    creatorName = creator?.name ?? 'Unknown';
+    creatorAvatar = creator?.avatar ?? 'avatar_0.png';
   }
 
   @override
   void initState() {
     super.initState();
 
-    LifecycleService()
-        .initialize(userId: widget.currentUserId, gameCode: widget.gameCode);
+    LifecycleService().initialize(
+      userId: widget.currentUserId,
+      gameCode: widget.gameCode,
+    );
 
     playerStream = _playerRepository.listenToPlayers(widget.gameCode);
     gameStream = _gameRepository.listenToGame(widget.gameCode);
 
     playerStream.listen((updatedPlayers) {
-      setState(() {
-        players = updatedPlayers
-            .where((player) => player.status == 'active')
-            .toList();
-        _fetchCreator();
-      });
+      if (mounted) {
+        setState(() {
+          players = updatedPlayers
+              .where((player) => player.status == 'active')
+              .toList();
+          _fetchCreator();
+        });
+      }
     });
 
     gameStream.listen((updatedGame) {
-      setState(() {
-        game = updatedGame;
-        _fetchCreator();
-      });
+      if (mounted) {
+        setState(() {
+          game = updatedGame;
+          _fetchCreator();
+        });
 
-      if (game.status == 'in-progress') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => GameScreen(
-              gameCode: game.gameCode,
-              currentPlayerId: widget.currentUserId,
-              isCreator: false,
+        if (game.status == 'in-progress') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GameScreen(
+                gameCode: game.gameCode,
+                currentPlayerId: widget.currentUserId,
+                isCreator: widget.isCreator, // Use passed isCreator value
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     });
   }
@@ -105,7 +112,6 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Centered Logo
               Center(
                 child: Image.asset(
                   'lib/assets/logo-small.png',
@@ -113,24 +119,21 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Centered Lobby No
               const Text(
                 "Lobby No",
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-
-              // Lobby Code + Copy Button
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     widget.gameCode,
                     style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green),
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   IconButton(
@@ -139,8 +142,8 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                       Clipboard.setData(ClipboardData(text: widget.gameCode));
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text("Lobby Code Copied!"),
-                          behavior: SnackBarBehavior.floating, // Floating style
+                          content: const Text("Lobby Code Copied!"),
+                          behavior: SnackBarBehavior.floating,
                           backgroundColor: Colors.green,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -152,37 +155,33 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-
-              // Split Section: Left (Details) | Right (Avatar)
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Left Side: Creator Name, Role, Round, Count
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(creatorName,
-                            style: const TextStyle(
-                                fontSize: 24, fontWeight: FontWeight.bold)),
-                        Text('Creator',
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w400)),
-                        SizedBox(height: 12),
-                        _infoText(
-                            "Round:",
-                            game != null
-                                ? game.numberOfRounds.toString()
-                                : '0'),
-                        _infoText(
-                          "Timer:",
-                          '${game != null ? game.timePerRound.toString() : '0'} sec',
+                        Text(
+                          creatorName,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                        const Text(
+                          'Creator',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _infoText("Round:", game.numberOfRounds.toString()),
+                        _infoText("Timer:", '${game.timePerRound} sec'),
                       ],
                     ),
-
-                    // Right Side: Circular User Avatar
                     CircleAvatar(
                       minRadius: 20,
                       maxRadius: 45,
@@ -192,8 +191,6 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // User Icons Grid (3 per row)
               Expanded(
                 child: StreamBuilder<List<Player>>(
                   stream: playerStream,
@@ -203,17 +200,15 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                     }
 
                     if (snapshot.hasError) {
-                      return Center(
-                        child: Text('Error: ${snapshot.error}'),
-                      );
+                      return Center(child: Text('Error: ${snapshot.error}'));
                     }
 
-                    final players = snapshot.data!
+                    final activePlayers = snapshot.data!
                             .where((player) => player.name != creatorName)
                             .toList() ??
                         [];
 
-                    if (players.isEmpty) {
+                    if (activePlayers.isEmpty) {
                       return const Center(
                         child: Text(
                           'No players have joined yet.',
@@ -225,14 +220,13 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                     return GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3, // 3 icons per row
+                        crossAxisCount: 3,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
                       ),
-                      itemCount: players.length,
+                      itemCount: activePlayers.length,
                       itemBuilder: (context, index) {
-                        final player = players[index];
-
+                        final player = activePlayers[index];
                         return Column(
                           children: [
                             CircleAvatar(
@@ -251,22 +245,17 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                   },
                 ),
               ),
-
               if (widget.isCreator)
                 Padding(
                   padding: const EdgeInsets.only(top: 16.0, bottom: 12.0),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                        minimumSize:
-                            Size(MediaQuery.of(context).size.width * 0.6, 50),
-                        backgroundColor: Color(0xFF4E0F97)),
-                    onPressed: players.isNotEmpty
-                        ? _startGame
-                        : null, // Disable if no players
-                    child: const Text(
-                      'START',
-                      style: TextStyle(fontSize: 18),
+                      minimumSize:
+                          Size(MediaQuery.of(context).size.width * 0.6, 50),
+                      backgroundColor: const Color(0xFF4E0F97),
                     ),
+                    onPressed: players.length >= 1 ? _startGame : null,
+                    child: const Text('START', style: TextStyle(fontSize: 18)),
                   ),
                 ),
               Padding(
@@ -274,7 +263,9 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                 child: TextButton(
                   onPressed: () {
                     _playerRepository.removePlayerFromGame(
-                        widget.gameCode, widget.currentUserId);
+                      widget.gameCode,
+                      widget.currentUserId,
+                    );
                     Navigator.pop(context);
                   },
                   child: const Text(
@@ -307,7 +298,10 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
         Text(
           value,
           style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.w500, color: Colors.green),
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.green,
+          ),
         ),
       ],
     );
@@ -315,7 +309,6 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
 
   void _startGame() {
     _gameRepository.startGame(widget.gameCode);
-
     Navigator.push(
       context,
       MaterialPageRoute(

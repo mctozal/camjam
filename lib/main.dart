@@ -1,35 +1,44 @@
 import 'package:camjam/core/services/permission_service.dart';
-import 'package:camjam/features/user/presentation/pages/user_avatar_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'features/user/presentation/pages/user_form_screen.dart';
 import 'features/dashboard/presentation/pages/dashboard_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'theme.dart';
+import 'package:camjam/core/state/game_state.dart';
 
 void main() async {
-  PermissionService permissionService = PermissionService();
+  Provider.debugCheckInvalidValueType = null;
 
-  permissionService.requestPermissions();
-
-  WidgetsFlutterBinding
-      .ensureInitialized(); // Ensures binding is ready for Firebase
+  WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
-    options:
-        DefaultFirebaseOptions.currentPlatform, // Use platform-specific config
+    options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Check if user exists
-  final prefs = await SharedPreferences.getInstance();
-  final userHashId = prefs.getString('userHashId'); // Retrieve userHashId
+  final permissionService = PermissionService();
+  await permissionService.requestPermissions();
 
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
-      .then((_) {
-    runApp(SelfieGameApp(userHashId: userHashId));
-  });
+  final prefs = await SharedPreferences.getInstance();
+  final userHashId = prefs.getString('userHashId');
+
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider<GameState>(
+          create: (_) =>
+              GameState('', ''), // Initial empty state, updated later
+          dispose: (_, gameState) => gameState.dispose(),
+        ),
+      ],
+      child: SelfieGameApp(userHashId: userHashId),
+    ),
+  );
 }
 
 class SelfieGameApp extends StatelessWidget {
@@ -43,8 +52,7 @@ class SelfieGameApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Cam Jam',
       theme: darkTheme,
-      initialRoute:
-          userHashId == null ? '/' : '/dashboard', // Check if userHashId exists
+      initialRoute: userHashId == null ? '/' : '/dashboard',
       routes: {
         '/': (context) => UserFormScreen(),
         '/dashboard': (context) => DashboardScreen(),

@@ -79,6 +79,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       createdAt: Timestamp.now(),
       pov: '',
       status: 'waiting',
+      currentRound: 1,
+      roundPhase: 'counter',
     );
 
     await _gameRepository.addGame(game);
@@ -254,8 +256,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(width: 24),
                     SizedBox(
                         width: 150,
                         child: Text('Round', // Fixed width for alignment

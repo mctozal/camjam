@@ -24,6 +24,21 @@ class GameRepository {
     }
   }
 
+  Future<void> updateRoundPhase(
+      String gameCode, String phase, int duration) async {
+    await FirebaseFirestore.instance.collection('games').doc(gameCode).update({
+      'roundPhase': phase,
+      'phaseStartTime': Timestamp.now(),
+      'phaseDuration': duration,
+    });
+  }
+
+  Future<void> updateCurrentRound(String gameCode, int round) async {
+    await FirebaseFirestore.instance.collection('games').doc(gameCode).update({
+      'currentRound': round,
+    });
+  }
+
   // Update pov
   Future<void> updatePov(String gameCode, String pov) async {
     try {
@@ -83,7 +98,9 @@ class GameRepository {
             creatorId: '',
             createdAt: Timestamp.now(),
             status: 'not_found',
-            pov: ''); // Return a default/fallback Game
+            pov: '',
+            currentRound: 1,
+            roundPhase: ''); // Return a default/fallback Game
       }
     });
   }
