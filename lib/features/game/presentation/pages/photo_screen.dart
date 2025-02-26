@@ -46,8 +46,7 @@ class PhotoScreenState extends State<PhotoScreen> {
       gameCode: widget.gameCode,
     );
     _remainingTime = _getInitialRemainingTime(widget.game);
-    _startCountdownTimer();
-    _initializeCamera();
+    _initializeCamera().then((s) => _startCountdownTimer());
   }
 
   Future<void> _initializeCamera() async {
@@ -67,7 +66,10 @@ class PhotoScreenState extends State<PhotoScreen> {
       if (mounted) setState(() {});
     } catch (e) {
       debugPrint('Failed to initialize camera: $e');
-      if (mounted) _showCameraErrorDialog();
+
+      if (mounted) {
+        _showCameraErrorDialog();
+      }
     }
   }
 
@@ -116,7 +118,7 @@ class PhotoScreenState extends State<PhotoScreen> {
         setState(() {
           _remainingTime--;
         });
-        if (widget.isCreator && _remainingTime <= 0 && !_isCapturing) {
+        if (_remainingTime <= 0 && !_isCapturing) {
           _capturePhoto();
         }
       } else {

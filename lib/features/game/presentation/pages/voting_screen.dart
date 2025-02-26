@@ -87,7 +87,6 @@ class _VotingScreenState extends State<VotingScreen> {
         timer.cancel();
         if (mounted) {
           widget.onRoundComplete();
-          Navigator.pop(context);
         }
       }
     });

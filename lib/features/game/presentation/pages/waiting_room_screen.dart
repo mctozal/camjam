@@ -8,7 +8,7 @@ import 'package:camjam/features/game/data/models/player.dart';
 import 'package:camjam/features/game/data/repositories/player_repository.dart';
 import 'package:camjam/features/game/presentation/pages/game_screen.dart';
 import 'package:camjam/features/game/data/repositories/game_repository.dart';
-import 'package:collection/collection.dart'; // Add this for firstWhereOrNull
+import 'package:collection/collection.dart' as collection;
 
 class WaitingRoomScreen extends StatefulWidget {
   final String gameCode;
@@ -309,7 +309,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
 
   void _startGame() {
     _gameRepository.startGame(widget.gameCode);
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => GameScreen(

@@ -25,15 +25,13 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late GameState _gameState;
-
   @override
   void initState() {
     super.initState();
-    _gameState = Provider.of<GameState>(context, listen: false);
-    _gameState.initializeGameState(widget.gameCode, widget.currentPlayerId);
-    _gameState.listenToGame(widget.gameCode);
-    _gameState.listenToPlayers(widget.gameCode);
+    var gameState = Provider.of<GameState>(context, listen: false);
+    gameState.initializeGameState(widget.gameCode, widget.currentPlayerId);
+    gameState.listenToGame(widget.gameCode);
+    gameState.listenToPlayers(widget.gameCode);
   }
 
   @override
@@ -43,10 +41,9 @@ class _GameScreenState extends State<GameScreen> {
       child: Consumer<GameState>(
         builder: (context, gameState, child) {
           final game = gameState.game;
-          debugPrint(
-              'GameScreen: Game=${game?.status}, Phase=${gameState.currentPhase}');
+          debugPrint('GameScreen: Game=${game?.status}');
 
-          if (game == null || gameState.currentPhase == null) {
+          if (game == null) {
             debugPrint('GameScreen: Game or Phase is null');
             return const Center(child: CircularProgressIndicator());
           }
@@ -56,42 +53,19 @@ class _GameScreenState extends State<GameScreen> {
             return Container();
           }
 
-          if (game.status == 'completed' && !gameState.hasNavigatedToResults) {
-            gameState.setNavigatedToResults();
+          if (game.status == 'completed') {
             debugPrint('GameScreen: Navigating to ResultScreen');
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ResultScreen(players: gameState.players),
-              ),
-            );
-            return Container();
-          }
 
-          if (game.roundPhase == 'voting' && !gameState.isVotingActive) {
-            gameState.setVotingActive(true);
-            debugPrint('GameScreen: Navigating to VotingScreen');
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => VotingScreen(
-                  gameCode: widget.gameCode,
-                  currentUserId: widget.currentPlayerId,
-                  isCreator: widget.isCreator,
-                  roundNumber: game.currentRound,
-                  onRoundComplete: () {
-                    gameState.setVotingActive(false);
-                    if (widget.isCreator &&
-                        game.currentRound < game.numberOfRounds) {
-                      gameState.updateRoundPhase('counter', 5);
-                      gameState.updateCurrentRound(game.currentRound + 1);
-                    } else if (widget.isCreator) {
-                      gameState.completeGame();
-                    }
-                  },
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ResultScreen(players: gameState.players),
                 ),
-              ),
-            );
+              );
+            });
+
             return Container();
           }
 
@@ -101,7 +75,7 @@ class _GameScreenState extends State<GameScreen> {
                 roundNumber: game.currentRound,
                 onCountdownComplete: () {
                   if (widget.isCreator) {
-                    gameState.nextPhase(game, widget.isCreator);
+                    gameState.updateRoundPhase('pov', 5);
                   }
                 },
               );
@@ -110,7 +84,7 @@ class _GameScreenState extends State<GameScreen> {
                 pose: game.pov,
                 onPoseComplete: () {
                   if (widget.isCreator) {
-                    gameState.nextPhase(game, widget.isCreator);
+                    gameState.updateRoundPhase('photo', 5);
                   }
                 },
               );
@@ -122,12 +96,27 @@ class _GameScreenState extends State<GameScreen> {
                 game: game,
                 onPhotoCaptured: () {
                   if (widget.isCreator) {
-                    gameState.nextPhase(game, widget.isCreator);
+                    gameState.updateRoundPhase('voting', 5);
                   }
                 },
               );
             case 'voting':
-              return Container();
+              return VotingScreen(
+                gameCode: widget.gameCode,
+                currentUserId: widget.currentPlayerId,
+                isCreator: widget.isCreator,
+                roundNumber: game.currentRound,
+                onRoundComplete: () {
+                  if (widget.isCreator &&
+                      game.currentRound < game.numberOfRounds) {
+                    gameState.updateCurrentRound(game.currentRound + 1);
+                    gameState.updateRoundPhase('counter', 5);
+                  } else if (widget.isCreator) {
+                    //if nor <=currentround
+                    gameState.completeGame();
+                  }
+                },
+              );
             default:
               debugPrint('GameScreen: Unknown phase: ${game.roundPhase}');
               return const Center(child: Text('Unknown game phase'));

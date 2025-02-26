@@ -55,7 +55,7 @@ class ResultScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton(
           onPressed: () {
-            Navigator.pop(context); // Navigate back to the main menu or start
+            Navigator.pop(context);
           },
           child: const Text('Play Again'),
         ),

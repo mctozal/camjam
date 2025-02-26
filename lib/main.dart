@@ -30,11 +30,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        Provider<GameState>(
-          create: (_) =>
-              GameState('', ''), // Initial empty state, updated later
-          dispose: (_, gameState) => gameState.dispose(),
-        ),
+        ChangeNotifierProvider(create: (context) => GameState('', ''))
       ],
       child: SelfieGameApp(userHashId: userHashId),
     ),
