@@ -2,22 +2,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class PoseScreen extends StatefulWidget {
-  final String pose;
   final VoidCallback onPoseComplete;
+  final String pose;
 
-  const PoseScreen({
-    required this.pose,
-    required this.onPoseComplete,
-    super.key,
-  });
+  const PoseScreen(
+      {super.key, required this.onPoseComplete, required this.pose});
 
   @override
   _PoseScreenState createState() => _PoseScreenState();
 }
 
 class _PoseScreenState extends State<PoseScreen> {
-  int _progress = 10;
-  Timer? _timer;
+  double _progress = 0.0;
 
   @override
   void initState() {
@@ -26,37 +22,48 @@ class _PoseScreenState extends State<PoseScreen> {
   }
 
   void _startProgress() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_progress > 0) {
-        if (mounted) {
-          setState(() {
-            _progress--;
-          });
-        }
-      } else {
+    Timer.periodic(Duration(milliseconds: 300), (timer) {
+      if (_progress >= 1.0) {
         timer.cancel();
-        widget.onPoseComplete();
+        widget.onPoseComplete(); // Move to game screen
+      } else {
+        setState(() {
+          _progress += 0.1;
+        });
       }
     });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(widget.pose, style: const TextStyle(fontSize: 24)),
-            Text('Time left: $_progress s'),
-          ],
-        ),
+      backgroundColor: Colors.black,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          LinearProgressIndicator(
+            value: _progress,
+            backgroundColor: Colors.grey,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+          ),
+          Expanded(
+            child: Center(
+              child: Text(
+                widget.pose,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
