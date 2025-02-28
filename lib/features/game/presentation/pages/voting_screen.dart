@@ -118,19 +118,54 @@ class _VotingScreenState extends State<VotingScreen> {
       canPop: false,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Voting Screen'),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image.asset(
+                'lib/assets/logo-small.png', // Replace with your small logo path
+                height: 50, // Adjust height as needed
+              ),
+              SizedBox(width: 20),
+              Text(
+                widget.roundNumber.toString(),
+                style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+              ),
+              Spacer(),
+              Column(
+                children: [
+                  Text(
+                    'Next Round',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Starts in ',
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '$remainingTime',
+                        style: const TextStyle(
+                            fontSize: 20,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
           automaticallyImplyLeading: false,
         ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Time Remaining: $remainingTime seconds',
-                style: const TextStyle(fontSize: 24),
-              ),
-            ),
             Container(
               height: 100,
               child: ListView.builder(

@@ -67,7 +67,6 @@ class _CounterScreenState extends State<CounterScreen> {
                 Text(
                   'Round ${widget.roundNumber}',
                   style: TextStyle(
-                    color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
@@ -76,7 +75,6 @@ class _CounterScreenState extends State<CounterScreen> {
                 Text(
                   'Starts in $_counter',
                   style: TextStyle(
-                    color: Colors.green,
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
                   ),

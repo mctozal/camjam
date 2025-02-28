@@ -227,7 +227,7 @@ class PhotoScreenState extends State<PhotoScreen> {
                   widget.game.pov,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -237,7 +237,7 @@ class PhotoScreenState extends State<PhotoScreen> {
           ],
         ),
         bottomNavigationBar: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.only(bottom: 60),
           child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,

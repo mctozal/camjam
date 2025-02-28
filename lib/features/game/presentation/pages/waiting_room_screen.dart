@@ -33,6 +33,8 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
   String creatorName = 'Unknown'; // Default value
   String creatorAvatar = 'avatar_0.png'; // Default value
 
+  late Stream<List<Player>> playerStream;
+  late Stream<Game> gameStream;
   List<Player> players = [];
 
   late Game game = Game(
@@ -47,15 +49,48 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
     roundPhase: 'counter',
   );
 
-  late Stream<List<Player>> playerStream;
-  late Stream<Game> gameStream;
-
   void _fetchCreator() {
     // Use firstWhereOrNull to safely find the creator
     final creator =
         players.firstWhereOrNull((player) => player.id == game.creatorId);
     creatorName = creator?.name ?? 'Unknown';
     creatorAvatar = creator?.avatar ?? 'avatar_0.png';
+  }
+
+  void _handleLeave() {
+    showDialog(
+      context: context,
+      barrierDismissible:
+          false, // Prevent dismissing the dialog by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Exit Game"),
+          content: Text("Are you really want to exit game?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _playerRepository.removePlayerFromGame(
+                  widget.gameCode,
+                  widget.currentUserId,
+                );
+                Navigator.of(context).pop(); // Close the dialog
+                Navigator.pop(context); // Navigate back
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, // Optional: Button color
+              ),
+              child: Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -262,11 +297,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                 padding: const EdgeInsets.only(top: 5.0, bottom: 5.0),
                 child: TextButton(
                   onPressed: () {
-                    _playerRepository.removePlayerFromGame(
-                      widget.gameCode,
-                      widget.currentUserId,
-                    );
-                    Navigator.pop(context);
+                    _handleLeave();
                   },
                   child: const Text(
                     'Leave',
