@@ -22,6 +22,7 @@ dependencies:
   animated_splash_screen: ^1.3.0
   lottie: ^3.2.0
   provider: ^6.1.2
+  image_downloader: ^0.31.0
 
 dev_dependencies:
   flutter_test:
@@ -44,4 +45,7 @@ flutter:
     - lib/assets/currency_icon.png
     - lib/assets/question_icon.png
     - lib/assets/heart_icon.png
+    - lib/assets/heart_icon_purple.png
     - lib/assets/splash_animation.json
+    - lib/assets/yagmur.png
+    - lib/assets/mucahit.png

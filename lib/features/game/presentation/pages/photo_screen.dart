@@ -62,6 +62,7 @@ class PhotoScreenState extends State<PhotoScreen> {
           CameraController(frontCamera, ResolutionPreset.medium);
       _initializeControllerFuture = _cameraController!.initialize();
       await _initializeControllerFuture;
+      await _cameraController?.setFlashMode(FlashMode.off);
 
       if (mounted) setState(() {});
     } catch (e) {
@@ -128,68 +129,136 @@ class PhotoScreenState extends State<PhotoScreen> {
   }
 
   int _getInitialRemainingTime(Game game) {
-    if (game.phaseStartTime == null || game.phaseDuration == null) return 0;
+    if (game.phaseStartTime == null) return 0;
     final startTime = game.phaseStartTime!.toDate();
     final now = DateTime.now();
     final elapsed = now.difference(startTime).inSeconds;
-    return (game.phaseDuration! - elapsed).clamp(0, game.phaseDuration!);
+    return (game.timePerRound - elapsed).clamp(0, game.timePerRound);
   }
 
   @override
   Widget build(BuildContext context) {
+    final mediaSize = MediaQuery.of(context).size;
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Game Screen - Round ${widget.game.currentRound}'),
-        automaticallyImplyLeading: false,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text('Time left: $_remainingTime s'),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(widget.game.pov),
-          ),
-          if (_capturedPhotoPath != null)
-            Expanded(
-              child: Image.file(
-                File(_capturedPhotoPath!),
-                fit: BoxFit.cover,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text('$_remainingTime',
+                        style: TextStyle(
+                            fontSize: 55,
+                            overflow: TextOverflow.ellipsis,
+                            color: Colors.red)),
+                  ),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      widget.game.currentRound.toString(),
+                      style: TextStyle(
+                          fontSize: 30, overflow: TextOverflow.ellipsis),
+                    ),
+                  ),
+                ],
               ),
-            )
-          else
-            Expanded(
-              child: FutureBuilder<void>(
-                future: _initializeControllerFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done &&
-                      _cameraController != null &&
-                      _cameraController!.value.isInitialized) {
-                    return CameraPreview(_cameraController!);
-                  } else if (snapshot.hasError) {
-                    return const Center(
-                      child: Text(
-                        'Error initializing camera.',
-                        style: TextStyle(fontSize: 16, color: Colors.red),
-                      ),
-                    );
-                  } else {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                },
+            ],
+          ),
+        ),
+        body: Stack(
+          children: [
+            if (_capturedPhotoPath != null)
+              Transform.scale(
+                scale: 1,
+                alignment: Alignment.topCenter,
+                child: Image.file(
+                  File(_capturedPhotoPath!),
+                  fit: BoxFit.cover,
+                ),
+              )
+            else
+              Expanded(
+                child: FutureBuilder<void>(
+                  future: _initializeControllerFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done &&
+                        _cameraController != null &&
+                        _cameraController!.value.isInitialized) {
+                      return ClipRect(
+                        clipper: _MediaSizeClipper(mediaSize),
+                        child: Transform.scale(
+                          scale: 1,
+                          alignment: Alignment.topCenter,
+                          child: CameraPreview(_cameraController!),
+                        ),
+                      );
+                    } else if (snapshot.hasError) {
+                      return const Center(
+                        child: Text(
+                          'Error initializing camera.',
+                          style: TextStyle(fontSize: 16, color: Colors.red),
+                        ),
+                      );
+                    } else {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                  },
+                ),
+              ),
+            // Transparent Text Background Overlay
+            Positioned(
+              top: 16, // Adjust as needed
+              left: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black
+                      .withOpacity(0.7), // Transparent white background
+                  borderRadius:
+                      BorderRadius.circular(10), // Optional: Rounded corners
+                ),
+                child: Text(
+                  widget.game.pov,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
-          const Spacer(),
-          if (!_captured)
-            ElevatedButton(
-              onPressed: _isCapturing ? null : _capturePhoto,
-              child: const Text('Capture Photo'),
-            ),
-        ],
-      ),
-    );
+          ],
+        ),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (!_captured)
+                  ElevatedButton(
+                    onPressed: _isCapturing ? null : _capturePhoto,
+                    style: ElevatedButton.styleFrom(
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(20),
+                      backgroundColor: Colors.white,
+                      elevation: 10,
+                    ),
+                    child: const Icon(
+                      Icons.circle,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                  ),
+              ]),
+        ));
   }
 
   @override
@@ -219,5 +288,19 @@ class PhotoScreenState extends State<PhotoScreen> {
         ],
       ),
     );
+  }
+}
+
+class _MediaSizeClipper extends CustomClipper<Rect> {
+  final Size mediaSize;
+  const _MediaSizeClipper(this.mediaSize);
+  @override
+  Rect getClip(Size size) {
+    return Rect.fromLTWH(0, 0, mediaSize.width, mediaSize.height);
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Rect> oldClipper) {
+    return true;
   }
 }

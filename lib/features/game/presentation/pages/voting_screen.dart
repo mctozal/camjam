@@ -185,8 +185,12 @@ class _VotingScreenState extends State<VotingScreen> {
                       final isSelected = selectedPicture == picture['url'];
 
                       return GestureDetector(
-                        onTap: () => _selectPicture(
-                            picture['url']!, picture['uploadedBy']!),
+                        onTap: () => {
+                          if (!isSelected &&
+                              picture['uploadedBy'] != widget.currentUserId)
+                            _selectPicture(
+                                picture['url']!, picture['uploadedBy']!)
+                        },
                         child: Stack(
                           children: [
                             ClipRRect(
@@ -200,12 +204,12 @@ class _VotingScreenState extends State<VotingScreen> {
                             ),
                             if (isSelected)
                               const Positioned(
-                                top: 5,
-                                right: 5,
+                                bottom: 5,
+                                left: 5,
                                 child: Icon(
                                   Icons.star,
                                   color: Colors.yellow,
-                                  size: 24,
+                                  size: 40,
                                 ),
                               ),
                           ],

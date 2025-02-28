@@ -5,10 +5,11 @@ class CounterScreen extends StatefulWidget {
   final int roundNumber;
   final VoidCallback onCountdownComplete;
 
-  const CounterScreen(
-      {super.key,
-      required this.roundNumber,
-      required this.onCountdownComplete});
+  const CounterScreen({
+    super.key,
+    required this.roundNumber,
+    required this.onCountdownComplete,
+  });
 
   @override
   _CounterScreenState createState() => _CounterScreenState();
@@ -16,6 +17,7 @@ class CounterScreen extends StatefulWidget {
 
 class _CounterScreenState extends State<CounterScreen> {
   int _counter = 5; // Start from 5
+  late Timer _countdownTimer; // Store the timer to cancel it later
 
   @override
   void initState() {
@@ -24,11 +26,12 @@ class _CounterScreenState extends State<CounterScreen> {
   }
 
   void _startCountdown() {
-    Timer.periodic(Duration(seconds: 1), (timer) {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_counter == 1) {
         timer.cancel();
         widget.onCountdownComplete(); // Move to the next screen
-      } else {
+      } else if (mounted) {
+        // Check if the widget is still mounted
         setState(() {
           _counter--;
         });
@@ -38,6 +41,7 @@ class _CounterScreenState extends State<CounterScreen> {
 
   @override
   void dispose() {
+    _countdownTimer.cancel(); // Cancel the timer when the widget is disposed
     super.dispose();
   }
 
@@ -68,7 +72,7 @@ class _CounterScreenState extends State<CounterScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
                   'Starts in $_counter',
                   style: TextStyle(

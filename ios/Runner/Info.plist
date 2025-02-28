@@ -51,6 +51,9 @@
 		<string>We need access to the camera for the game.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>We need access to the microphone for the game.</string>
-
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>We need access to the photo library for the game.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>We need access to the photo library addition for the game.</string>
 	</dict>
 </plist>

@@ -5,8 +5,11 @@ class PoseScreen extends StatefulWidget {
   final VoidCallback onPoseComplete;
   final String pose;
 
-  const PoseScreen(
-      {super.key, required this.onPoseComplete, required this.pose});
+  const PoseScreen({
+    super.key,
+    required this.onPoseComplete,
+    required this.pose,
+  });
 
   @override
   _PoseScreenState createState() => _PoseScreenState();
@@ -14,6 +17,7 @@ class PoseScreen extends StatefulWidget {
 
 class _PoseScreenState extends State<PoseScreen> {
   double _progress = 0.0;
+  late Timer _progressTimer; // Store the timer to cancel it later
 
   @override
   void initState() {
@@ -22,11 +26,12 @@ class _PoseScreenState extends State<PoseScreen> {
   }
 
   void _startProgress() {
-    Timer.periodic(Duration(milliseconds: 300), (timer) {
+    _progressTimer = Timer.periodic(const Duration(milliseconds: 300), (timer) {
       if (_progress >= 1.0) {
         timer.cancel();
-        widget.onPoseComplete(); // Move to game screen
-      } else {
+        widget.onPoseComplete(); // Move to the next screen
+      } else if (mounted) {
+        // Check if the widget is still mounted
         setState(() {
           _progress += 0.1;
         });
@@ -36,6 +41,7 @@ class _PoseScreenState extends State<PoseScreen> {
 
   @override
   void dispose() {
+    _progressTimer.cancel(); // Cancel the timer when the widget is disposed
     super.dispose();
   }
 
@@ -49,13 +55,13 @@ class _PoseScreenState extends State<PoseScreen> {
           LinearProgressIndicator(
             value: _progress,
             backgroundColor: Colors.grey,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
           ),
           Expanded(
             child: Center(
               child: Text(
                 widget.pose,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,

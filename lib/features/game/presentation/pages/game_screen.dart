@@ -60,8 +60,12 @@ class _GameScreenState extends State<GameScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      ResultScreen(players: gameState.players),
+                  builder: (context) => ResultScreen(
+                    players: gameState.players,
+                    gameCode: game.gameCode,
+                    numberOfRound: game.numberOfRounds,
+                    timePerRound: game.timePerRound,
+                  ),
                 ),
               );
             });
@@ -111,6 +115,7 @@ class _GameScreenState extends State<GameScreen> {
                       game.currentRound < game.numberOfRounds) {
                     gameState.updateCurrentRound(game.currentRound + 1);
                     gameState.updateRoundPhase('counter', 5);
+                    gameState.updatePov(game.gameCode);
                   } else if (widget.isCreator) {
                     //if nor <=currentround
                     gameState.completeGame();

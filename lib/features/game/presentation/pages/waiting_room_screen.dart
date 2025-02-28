@@ -88,7 +88,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
           _fetchCreator();
         });
 
-        if (game.status == 'in-progress') {
+        if (game.status == 'in-progress' && !widget.isCreator) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(

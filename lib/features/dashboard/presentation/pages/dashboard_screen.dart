@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:camjam/core/services/user_service.dart';
+import 'package:camjam/features/dashboard/presentation/pages/about_screen.dart';
 import 'package:camjam/features/game/data/models/game.dart';
 import 'package:camjam/features/game/data/models/player.dart';
 import 'package:camjam/features/game/data/repositories/game_repository.dart';
@@ -67,7 +68,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _createGame() async {
-    if (_gameCode == null) _generateGameCode();
+    _generateGameCode();
 
     if (userId.isEmpty) return;
 
@@ -162,7 +163,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   height: 50,
                 ),
                 IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AboutScreen(),
+                        ),
+                      );
+                    },
                     icon:
                         ImageIcon(AssetImage('lib/assets/question_icon.png'))),
                 IconButton(

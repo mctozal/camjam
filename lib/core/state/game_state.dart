@@ -12,7 +12,7 @@ class GameState extends ChangeNotifier {
   final GameRepository _gameRepository = GameRepository();
   final GameDataRepository _gameDataRepository = GameDataRepository();
   final PlayerRepository _playerRepository = PlayerRepository();
-  final PhotoRepository _photoRepository = PhotoRepository();
+
   Game? _game;
   List<Player> _players = [];
   StreamSubscription<Game>? _gameStreamSubscription;
@@ -26,14 +26,6 @@ class GameState extends ChangeNotifier {
   Stream<List<Player>> get playerStream =>
       _playerRepository.listenToPlayers(_game?.gameCode ?? '');
 
-  GameState(String gameCode, String currentPlayerId) {
-    if (gameCode.isNotEmpty && currentPlayerId.isNotEmpty) {
-      initializeGameState(gameCode, currentPlayerId);
-      listenToGame(gameCode);
-      listenToPlayers(gameCode);
-    }
-  }
-
   Future<void> initializeGameState(
       String gameCode, String currentPlayerId) async {
     try {
@@ -41,15 +33,17 @@ class GameState extends ChangeNotifier {
           .collection('games')
           .doc(gameCode)
           .get();
+
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         _game = Game.fromFirestore(data);
-        if (_game!.pov == null || _game!.pov.isEmpty) {
-          final defaultPov =
-              await _gameDataRepository.getRandomPov() ?? 'Default Pose';
+
+        if (_game!.pov.isEmpty) {
+          final defaultPov = await _gameDataRepository.getRandomPov();
           await _gameRepository.updatePov(gameCode, defaultPov);
           _game = _game!.copyWith(pov: defaultPov);
         }
+
         debugPrint(
             'Initial game state loaded: ${_game!.status}, phase: ${_game!.roundPhase}, pov: ${_game!.pov}');
       } else {
@@ -57,40 +51,24 @@ class GameState extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error initializing game state: $e');
-      _game = Game(
-        gameCode: gameCode,
-        creatorId: currentPlayerId,
-        status: 'error',
-        numberOfRounds: 3,
-        timePerRound: 30,
-        pov: 'Error Pose',
-        createdAt: Timestamp.now(),
-        currentRound: 1,
-        roundPhase: 'error',
-        phaseStartTime: Timestamp.now(),
-        phaseDuration: 10,
-      );
     }
-    notifyListeners();
   }
 
   void listenToGame(String gameCode) {
     _gameStreamSubscription?.cancel();
-    _gameStreamSubscription = _gameRepository.listenToGame(gameCode).listen(
-      (game) {
-        _game = game;
-        debugPrint(
-            'Game stream update: ${_game!.status}, phase: ${_game!.roundPhase}, pov: ${_game!.pov}');
+    _gameStreamSubscription =
+        _gameRepository.listenToGame(gameCode).listen((game) {
+      _game = game;
+      debugPrint(
+          'Game stream update: ${_game!.status}, phase: ${_game!.roundPhase}, pov: ${_game!.pov}');
+      notifyListeners();
+    }, onError: (error) {
+      debugPrint('Game stream error: $error');
+      if (_game != null) {
+        _game = _game!.copyWith(status: 'error', roundPhase: 'error');
         notifyListeners();
-      },
-      onError: (error) {
-        debugPrint('Game stream error: $error');
-        if (_game != null) {
-          _game = _game!.copyWith(status: 'error', roundPhase: 'error');
-          notifyListeners();
-        }
-      },
-    );
+      }
+    });
   }
 
   void listenToPlayers(String gameCode) {
@@ -108,6 +86,12 @@ class GameState extends ChangeNotifier {
     );
   }
 
+  Future<void> updatePov(String gameCode) async {
+    final newPov = await _gameDataRepository.getRandomPov();
+    await _gameRepository.updatePov(gameCode, newPov);
+    _game = _game!.copyWith(pov: newPov);
+  }
+
   Future<void> updateRoundPhase(String phase, int duration) async {
     if (_game == null) return;
     debugPrint('Updating phase to $phase');
@@ -123,7 +107,9 @@ class GameState extends ChangeNotifier {
   Future<void> updateCurrentRound(int round) async {
     if (_game == null) return;
     await _gameRepository.updateCurrentRound(_game!.gameCode, round);
+
     _game = _game!.copyWith(currentRound: round);
+    notifyListeners();
     debugPrint('current round updated.');
   }
 
@@ -132,10 +118,6 @@ class GameState extends ChangeNotifier {
     await _gameRepository.completeGame(_game!.gameCode);
     _game = _game!.copyWith(status: 'completed');
     notifyListeners();
-  }
-
-  Stream<List<Map<String, dynamic>>> photoStream(String gameCode) {
-    return _photoRepository.listenToPictures(gameCode);
   }
 
   @override

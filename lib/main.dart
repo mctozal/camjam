@@ -1,4 +1,3 @@
-import 'package:camjam/core/services/permission_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -19,9 +18,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  final permissionService = PermissionService();
-  await permissionService.requestPermissions();
-
   final prefs = await SharedPreferences.getInstance();
   final userHashId = prefs.getString('userHashId');
 
@@ -29,9 +25,7 @@ void main() async {
 
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => GameState('', ''))
-      ],
+      providers: [ChangeNotifierProvider(create: (context) => GameState())],
       child: SelfieGameApp(userHashId: userHashId),
     ),
   );
