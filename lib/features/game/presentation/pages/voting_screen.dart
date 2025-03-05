@@ -7,6 +7,7 @@ import 'package:camjam/features/game/data/repositories/game_repository.dart';
 import 'package:camjam/features/game/data/repositories/photo_repository.dart';
 import 'package:camjam/features/game/data/repositories/player_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 class VotingScreen extends StatefulWidget {
   final String gameCode;
@@ -222,6 +223,7 @@ class _VotingScreenState extends State<VotingScreen> {
                       return GestureDetector(
                         onTap: () => {
                           if (!isSelected &&
+                              selectedPicture == null &&
                               picture['uploadedBy'] != widget.currentUserId)
                             _selectPicture(
                                 picture['url']!, picture['uploadedBy']!)
@@ -237,16 +239,34 @@ class _VotingScreenState extends State<VotingScreen> {
                                 height: double.infinity,
                               ),
                             ),
+                            if (!isSelected &&
+                                picture['uploadedBy'] != widget.currentUserId)
+                              Positioned(
+                                  bottom: 5,
+                                  right: 5,
+                                  child: Image.asset(
+                                    'lib/assets/heart_icon_outline.png',
+                                    height: 35,
+                                    fit: BoxFit.cover,
+                                  )),
                             if (isSelected)
-                              const Positioned(
-                                bottom: 5,
-                                left: 5,
-                                child: Icon(
-                                  Icons.star,
-                                  color: Colors.yellow,
-                                  size: 40,
-                                ),
-                              ),
+                              Positioned(
+                                  bottom: 5,
+                                  right: 5,
+                                  child: Image.asset(
+                                    'lib/assets/heart_icon_inline.png',
+                                    height: 35,
+                                    fit: BoxFit.cover,
+                                  )),
+                            if (isSelected)
+                              Positioned(
+                                  bottom: 20,
+                                  right: 0,
+                                  child: Lottie.asset(
+                                      'lib/assets/heart_animation.json',
+                                      width: 100,
+                                      animate: true,
+                                      repeat: false)),
                           ],
                         ),
                       );

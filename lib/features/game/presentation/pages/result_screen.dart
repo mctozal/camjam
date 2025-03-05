@@ -1,7 +1,9 @@
+import 'package:camjam/core/state/game_state.dart';
 import 'package:camjam/features/game/data/repositories/photo_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:camjam/features/game/data/models/player.dart';
 import 'package:image_downloader/image_downloader.dart';
+import 'package:provider/provider.dart';
 
 class ResultScreen extends StatefulWidget {
   final List<Player> players;
@@ -245,6 +247,9 @@ class _ResultScreenState extends State<ResultScreen> {
         padding: const EdgeInsets.all(16.0),
         child: TextButton(
           onPressed: () {
+            final gameState = Provider.of<GameState>(context, listen: false);
+            gameState.resetGameState(); // Reset for all players
+            debugPrint('Reset GameState from ResultScreen');
             Navigator.pop(context);
           },
           child: const Text(

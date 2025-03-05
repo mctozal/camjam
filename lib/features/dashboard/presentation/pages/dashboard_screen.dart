@@ -8,6 +8,7 @@ import 'package:camjam/features/game/data/repositories/game_repository.dart';
 import 'package:camjam/features/game/data/repositories/player_repository.dart';
 import 'package:camjam/features/game/presentation/pages/waiting_room_screen.dart';
 import 'package:camjam/features/user/presentation/pages/user_avatar_screen.dart';
+import 'package:camjam/features/user/presentation/widgets/name_update_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
@@ -184,15 +185,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Text(
                   'Welcome,',
-                  style:
-                      TextStyle(fontSize: 16, overflow: TextOverflow.ellipsis),
+                  style: TextStyle(fontSize: 16),
                 ),
-                Text(
-                  userName,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                TextButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return NameUpdateDialog(onComplete: () {
+                          _fetchUserDetails();
+                        });
+                      },
+                    );
+                  },
+                  child: Text(userName,
+                      style: TextStyle(
+                          fontSize: 24,
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          overflow: TextOverflow.ellipsis)),
                 ),
               ],
             ),

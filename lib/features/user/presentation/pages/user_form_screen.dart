@@ -3,7 +3,6 @@ import 'package:camjam/core/services/user_service.dart';
 import 'package:camjam/features/user/presentation/pages/user_avatar_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import '../widgets/user_input_form.dart';
 
 class UserFormScreen extends StatefulWidget {

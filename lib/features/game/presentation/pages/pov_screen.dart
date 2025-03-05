@@ -48,14 +48,13 @@ class _PoseScreenState extends State<PoseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           LinearProgressIndicator(
             value: _progress,
             backgroundColor: Colors.grey,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4E0F97)),
           ),
           Expanded(
             child: Center(

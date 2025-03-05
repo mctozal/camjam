@@ -6,12 +6,12 @@ import 'package:camjam/features/game/data/models/player.dart';
 import 'package:camjam/features/game/data/repositories/game_data_repository.dart';
 import 'package:camjam/features/game/data/repositories/game_repository.dart';
 import 'package:camjam/features/game/data/repositories/player_repository.dart';
-import 'package:camjam/features/game/data/repositories/photo_repository.dart';
 
 class GameState extends ChangeNotifier {
   final GameRepository _gameRepository = GameRepository();
   final GameDataRepository _gameDataRepository = GameDataRepository();
   final PlayerRepository _playerRepository = PlayerRepository();
+  List<String> _previousPovs = [];
 
   Game? _game;
   List<Player> _players = [];
@@ -40,6 +40,7 @@ class GameState extends ChangeNotifier {
 
         if (_game!.pov.isEmpty) {
           final defaultPov = await _gameDataRepository.getRandomPov();
+          _previousPovs.add(defaultPov);
           await _gameRepository.updatePov(gameCode, defaultPov);
           _game = _game!.copyWith(pov: defaultPov);
         }
@@ -59,8 +60,10 @@ class GameState extends ChangeNotifier {
     _gameStreamSubscription =
         _gameRepository.listenToGame(gameCode).listen((game) {
       _game = game;
+
       debugPrint(
           'Game stream update: ${_game!.status}, phase: ${_game!.roundPhase}, pov: ${_game!.pov}');
+
       notifyListeners();
     }, onError: (error) {
       debugPrint('Game stream error: $error');
@@ -87,7 +90,14 @@ class GameState extends ChangeNotifier {
   }
 
   Future<void> updatePov(String gameCode) async {
-    final newPov = await _gameDataRepository.getRandomPov();
+    String newPov;
+    do {
+      newPov = await _gameDataRepository.getRandomPov();
+    } while (_previousPovs.contains(newPov));
+    _previousPovs.add(newPov);
+
+    var str = _previousPovs.join(',');
+    debugPrint('Previous povs: {$str}');
     await _gameRepository.updatePov(gameCode, newPov);
     _game = _game!.copyWith(pov: newPov);
   }
@@ -117,6 +127,18 @@ class GameState extends ChangeNotifier {
     if (_game == null) return;
     await _gameRepository.completeGame(_game!.gameCode);
     _game = _game!.copyWith(status: 'completed');
+    notifyListeners();
+  }
+
+  void resetGameState() {
+    _game = null;
+    _players = [];
+    _gameStreamSubscription?.cancel();
+    _playerStreamSubscription?.cancel();
+    _gameStreamSubscription = null;
+    _playerStreamSubscription = null;
+    _previousPovs = [];
+    debugPrint('GameState fully reset');
     notifyListeners();
   }
 

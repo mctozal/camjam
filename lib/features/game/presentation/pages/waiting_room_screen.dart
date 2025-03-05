@@ -239,9 +239,8 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                     }
 
                     final activePlayers = snapshot.data!
-                            .where((player) => player.name != creatorName)
-                            .toList() ??
-                        [];
+                        .where((player) => player.name != creatorName)
+                        .toList();
 
                     if (activePlayers.isEmpty) {
                       return const Center(

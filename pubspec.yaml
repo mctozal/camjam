@@ -46,6 +46,9 @@ flutter:
     - lib/assets/question_icon.png
     - lib/assets/heart_icon.png
     - lib/assets/heart_icon_purple.png
+    - lib/assets/heart_icon_outline.png
+    - lib/assets/heart_icon_inline.png
     - lib/assets/splash_animation.json
+    - lib/assets/heart_animation.json
     - lib/assets/yagmur.png
     - lib/assets/mucahit.png
