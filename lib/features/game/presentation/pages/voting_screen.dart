@@ -167,7 +167,7 @@ class _VotingScreenState extends State<VotingScreen> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
+            SizedBox(
               height: 100,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,

@@ -1,0 +1,2 @@
+/Users/oblite/Repos/camjam/android/app/.cxx/RelWithDebInfo/1d66464w/x86/CMakeFiles/edit_cache.dir
+/Users/oblite/Repos/camjam/android/app/.cxx/RelWithDebInfo/1d66464w/x86/CMakeFiles/rebuild_cache.dir

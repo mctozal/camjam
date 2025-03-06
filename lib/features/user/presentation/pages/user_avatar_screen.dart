@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class UserAvatarScreen extends StatefulWidget {
   final String userName;
 
-  UserAvatarScreen({required this.userName});
+  const UserAvatarScreen({super.key, required this.userName});
 
   @override
   _UserAvatarScreenState createState() => _UserAvatarScreenState();
@@ -76,10 +76,10 @@ class _UserAvatarScreenState extends State<UserAvatarScreen> {
                   // Show a message to select an image
                 }
               },
-              child: Text("That's it"),
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.green),
+                backgroundColor: WidgetStateProperty.all(Colors.green),
               ),
+              child: Text("That's it"),
             ),
           ],
         ),

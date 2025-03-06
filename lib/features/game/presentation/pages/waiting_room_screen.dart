@@ -288,7 +288,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                           Size(MediaQuery.of(context).size.width * 0.6, 50),
                       backgroundColor: const Color(0xFF4E0F97),
                     ),
-                    onPressed: players.length >= 1 ? _startGame : null,
+                    onPressed: players.isNotEmpty ? _startGame : null,
                     child: const Text('START', style: TextStyle(fontSize: 18)),
                   ),
                 ),

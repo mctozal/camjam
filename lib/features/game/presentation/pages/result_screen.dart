@@ -2,7 +2,6 @@ import 'package:camjam/core/state/game_state.dart';
 import 'package:camjam/features/game/data/repositories/photo_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:camjam/features/game/data/models/player.dart';
-import 'package:image_downloader/image_downloader.dart';
 import 'package:provider/provider.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -53,16 +52,16 @@ class _ResultScreenState extends State<ResultScreen> {
   Future<void> _downloadMeme(String imageUrl) async {
     try {
       // Saved with this method.
-      var imageId = await ImageDownloader.downloadImage(imageUrl);
+      // var imageId = await ImageDownloader.downloadImage(imageUrl);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Image downloaded.')),
         );
       }
-      if (imageId == null) {
-        return;
-      }
+      // if (imageId == null) {
+      //   return;
+      // }
     } catch (e) {
       debugPrint('Error downloading meme: $e');
       if (mounted) {

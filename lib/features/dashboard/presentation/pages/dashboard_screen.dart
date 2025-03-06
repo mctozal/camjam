@@ -15,6 +15,8 @@ import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 
 class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
@@ -232,7 +234,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
               child: CircleAvatar(
                 radius: 50,
-                backgroundImage: AssetImage('lib/assets/' + avatar),
+                backgroundImage: AssetImage('lib/assets/$avatar'),
               ),
             ),
             SizedBox(height: 20),
@@ -251,10 +253,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   keyboardType: TextInputType.number,
                   maxLength: 5,
                   validator: (value) {
-                    if (value == null || value.isEmpty)
+                    if (value == null || value.isEmpty) {
                       return 'Please enter a code';
-                    if (value.length != 5 || int.tryParse(value) == null)
+                    }
+                    if (value.length != 5 || int.tryParse(value) == null) {
                       return 'Enter a valid 5-digit code';
+                    }
                     return null;
                   },
                 ),
@@ -265,10 +269,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               width: 200,
               child: ElevatedButton(
                 onPressed: _joinGame,
-                child: Text('JOIN A GAME'),
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(Colors.green),
+                  backgroundColor: WidgetStateProperty.all(Colors.green),
                 ),
+                child: Text('JOIN A GAME'),
               ),
             ),
             SizedBox(height: 48),
@@ -363,7 +367,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SizedBox(height: 24),
             ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(Color(0xFF4E0F97)),
+                  backgroundColor: WidgetStateProperty.all(Color(0xFF4E0F97)),
                 ),
                 onPressed: _createGame,
                 child:

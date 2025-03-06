@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ImageCarousel extends StatefulWidget {
   final Function(String) onImageSelected;
 
-  ImageCarousel({required this.onImageSelected});
+  const ImageCarousel({super.key, required this.onImageSelected});
 
   @override
   _ImageCarouselState createState() => _ImageCarouselState();
@@ -108,7 +108,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
                     children: [
                       CircleAvatar(
                         foregroundImage:
-                            AssetImage('lib/assets/' + _images[index]),
+                            AssetImage('lib/assets/${_images[index]}'),
                         minRadius: 30,
                         maxRadius: 75,
                         backgroundColor: _selectedImage == _images[index]

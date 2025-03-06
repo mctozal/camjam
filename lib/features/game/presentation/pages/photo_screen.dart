@@ -16,6 +16,7 @@ class PhotoScreen extends StatefulWidget {
   final VoidCallback onPhotoCaptured;
 
   const PhotoScreen({
+    super.key,
     required this.gameCode,
     required this.currentPlayerId,
     required this.isCreator,

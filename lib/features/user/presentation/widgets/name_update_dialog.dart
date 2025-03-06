@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class NameUpdateDialog extends StatefulWidget {
   final VoidCallback onComplete;
-  NameUpdateDialog({required this.onComplete, super.key});
+  const NameUpdateDialog({required this.onComplete, super.key});
 
   @override
   _NameUpdateDialogState createState() => _NameUpdateDialogState();

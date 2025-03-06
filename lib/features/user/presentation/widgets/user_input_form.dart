@@ -7,7 +7,8 @@ class UserInputForm extends StatefulWidget {
   final Function(String) onGenderChanged;
   final Function(int) onAgeSaved;
 
-  UserInputForm({
+  const UserInputForm({
+    super.key,
     required this.formKey,
     required this.usernameController,
     required this.onGenderChanged,

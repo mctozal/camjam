@@ -76,7 +76,7 @@ class AboutScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 16), // Spacing between columns
                       // Right column: Text (Yağmur Tozal)
-                      Container(
+                      SizedBox(
                         width: MediaQuery.of(context).size.width *
                             0.4, // 40% of screen width
                         child: Column(
@@ -131,7 +131,7 @@ class AboutScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 20),
-                      Container(
+                      SizedBox(
                         width: MediaQuery.of(context).size.width *
                             0.4, // 40% of screen width
                         child: Column(

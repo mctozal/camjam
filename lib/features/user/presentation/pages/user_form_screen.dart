@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../widgets/user_input_form.dart';
 
 class UserFormScreen extends StatefulWidget {
+  const UserFormScreen({super.key});
+
   @override
   _UserFormScreenState createState() => _UserFormScreenState();
 }
