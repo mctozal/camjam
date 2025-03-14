@@ -54,6 +54,7 @@ class _UserInputFormState extends State<UserInputForm> {
           ),
           SizedBox(height: 16),
           TextFormField(
+            onTapOutside: (e) => FocusScope.of(context).unfocus(),
             controller: widget.usernameController,
             inputFormatters: [
               UpperCaseTextFormatter(), // Forces uppercase input
@@ -95,6 +96,7 @@ class _UserInputFormState extends State<UserInputForm> {
 
           // Age Field
           TextFormField(
+            onTapOutside: (e) => FocusScope.of(context).unfocus(),
             decoration: InputDecoration(
               labelText: 'Age',
               border: OutlineInputBorder(),

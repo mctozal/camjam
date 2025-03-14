@@ -1,0 +1,2 @@
+/Users/oblite/Repos/camjam/android/app/.cxx/Debug/1c6h2z5s/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/oblite/Repos/camjam/android/app/.cxx/Debug/1c6h2z5s/armeabi-v7a/CMakeFiles/rebuild_cache.dir

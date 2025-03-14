@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/Users/oblite/flutter/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/oblite/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/oblite/Repos/camjam/android/app/.cxx/Debug/1c6h2z5s/arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/oblite/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/oblite/Repos/camjam/android/app/.cxx/Debug/1c6h2z5s/arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}

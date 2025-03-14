@@ -14,6 +14,7 @@ class VotingScreen extends StatefulWidget {
   final String currentUserId;
   final bool isCreator;
   final int roundNumber;
+
   final VoidCallback onRoundComplete;
 
   const VotingScreen({
@@ -111,6 +112,19 @@ class _VotingScreenState extends State<VotingScreen> {
         hasVoted = true;
       }
     });
+  }
+
+  bool _allVoted() {
+    if (players.isEmpty) return false; // No players, no votes
+    final activePlayers = players.where((player) => player.status == 'active');
+    if (activePlayers.isEmpty) return true;
+    // final currentRoundStr = widget.roundNumber.toString();
+
+    // int totalScore = 0;
+    // activePlayers.forEach((player) => totalScore = totalScore + player.score);
+
+    // if (totalScore == (activePlayers.length * 10)) return true;
+    return true;
   }
 
   @override
@@ -276,6 +290,29 @@ class _VotingScreenState extends State<VotingScreen> {
               ),
             ),
           ],
+        ),
+        bottomNavigationBar: Padding(
+          padding: EdgeInsets.only(bottom: 50),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (widget.isCreator && _allVoted())
+                ElevatedButton(
+                  style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all(Color(0xFF4E0F97))),
+                  onPressed: () {
+                    widget.onRoundComplete();
+                  },
+                  child: const Text(
+                    'Next Round',
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

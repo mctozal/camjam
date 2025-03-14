@@ -243,6 +243,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Form(
                 key: _formKey,
                 child: TextFormField(
+                  onTapOutside: (e) => FocusScope.of(context).unfocus(),
                   inputFormatters: [
                     UpperCaseTextFormatter(), // Forces uppercase input
                   ],
